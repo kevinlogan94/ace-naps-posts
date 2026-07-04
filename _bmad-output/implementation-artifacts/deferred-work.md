@@ -12,3 +12,13 @@
 - HEIC or empty `file.type` stored as `image/jpeg` may fail at Instagram publish — out of v1 AC scope
 - `status` column has no CHECK constraint — service-role publish path only writes valid values
 - Storage policies in migration are not idempotent on re-apply — one-time bootstrap migration
+
+## Deferred from: code review of 1-2-publish-oldest-pending-photo-daily-to-instagram.md (2026-07-04)
+
+- FIFO selection has no row lock — concurrent manual invoke + cron could double-post; v1 assumes once-daily cron only
+- No Instagram container `status_code` polling before publish — spec two-step flow; Meta async containers may flake
+- Cron `pg_net.http_post` does not inspect HTTP response — publish failures invisible at DB layer; v1 ops acceptable
+- Cron migration can apply before vault secrets exist — URL becomes `NULL/functions/v1/...`; example file exists
+- Transient signed-URL errors permanently mark row `failed` with no retry — AD-9 no auto-retry; README manual reset documented
+- `index.ts` handler untested — only `captions.ts` covered by Deno tests; v1 acceptable
+- `parseInstagramError` stores message only, drops Meta error codes — minor ops detail

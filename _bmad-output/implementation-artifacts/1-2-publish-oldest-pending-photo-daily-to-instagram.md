@@ -173,6 +173,21 @@ Composer
 - supabase/migrations/002_setup_vault_secrets.sql.example (new)
 - README.md (modified)
 
+### Review Findings (2026-07-04)
+
+- [ ] [Review][Decision] AC 8 manual E2E not verified in repo — Story requires a real pending row posted to `@ace_naps` before cron is enabled; no test log or evidence in artifacts. Has this been run successfully?
+- [ ] [Review][Patch] Post-success DB update failure leaves row pending and risks duplicate Instagram post [supabase/functions/post-to-instagram/index.ts:145]
+- [ ] [Review][Patch] Failure-path queue updates ignore Supabase `{ error }` — row can stay pending after signed-URL or Instagram failures [supabase/functions/post-to-instagram/index.ts:108]
+- [ ] [Review][Patch] README missing manual invoke, vault secret, and cron ordering docs despite task marked complete [README.md]
+- [x] [Review][Defer] FIFO selection has no row lock — concurrent manual invoke + cron could double-post [supabase/functions/post-to-instagram/index.ts:78] — deferred, v1 assumes once-daily cron only
+- [x] [Review][Defer] No Instagram container `status_code` polling before publish — spec two-step flow; Meta async containers may flake [supabase/functions/post-to-instagram/index.ts:122] — deferred, spec-compliant
+- [x] [Review][Defer] Cron `pg_net.http_post` does not inspect HTTP response — publish failures invisible at DB layer [supabase/migrations/002_schedule_daily_cron.sql:16] — deferred, v1 ops acceptable
+- [x] [Review][Defer] Cron migration can apply before vault secrets exist — URL becomes `NULL/functions/v1/...` [supabase/migrations/002_schedule_daily_cron.sql:17] — deferred, example file + README gap tracked as patch
+- [x] [Review][Defer] Transient signed-URL errors permanently mark row `failed` with no retry [supabase/functions/post-to-instagram/index.ts:106] — deferred, AD-9 no auto-retry; README manual reset documented
+- [x] [Review][Defer] `index.ts` handler untested — only `captions.ts` covered by Deno tests [supabase/functions/post-to-instagram/captions_test.ts] — deferred, v1 acceptable
+- [x] [Review][Defer] `parseInstagramError` stores message only, drops Meta error codes [supabase/functions/post-to-instagram/captions.ts:51] — deferred, minor ops detail
+
 ## Change Log
 
 - 2026-07-03: Story 1.2 implementation — Edge Function, captions, cron migration, tests, README manual invoke docs
+- 2026-07-04: Code review — 1 decision-needed, 3 patch, 7 defer
