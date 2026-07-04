@@ -21,7 +21,10 @@ export async function uploadPhotos(files: File[]): Promise<UploadResult[]> {
     const path = buildStoragePath(file.name)
     const { error: uploadError } = await supabase.storage
       .from('ace-photos')
-      .upload(path, file, { contentType: file.type || 'image/jpeg', upsert: false })
+      .upload(path, file, {
+        contentType: file.type || 'image/jpeg',
+        upsert: false
+      })
 
     if (uploadError) {
       results.push({ file, ok: false, error: uploadError.message })

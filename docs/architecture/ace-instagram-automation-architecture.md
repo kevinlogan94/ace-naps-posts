@@ -17,20 +17,20 @@ The design goal is low complexity, low maintenance, and as little code as possib
 
 ## Locked product decisions
 
-| Decision | Value |
-|---|---|
-| Instagram account | `ace_naps` professional account |
-| Upload interface | Single-page Nuxt app with Nuxt UI |
-| Upload destination | One Supabase Storage bucket |
-| Queue rule | Oldest unprocessed image first |
-| Empty queue behavior | Log `nothing to post` and exit |
-| Caption behavior | Random caption on every post, repeats allowed |
-| Hashtags | `#naptime #sleep #dogsofinstagram #shihtzulover` |
-| Posting engine | Supabase Edge Function on a schedule (09:00 `America/New_York`) |
-| Frontend hosting | Netlify |
-| Project layout | Nuxt app at repo root (`ace-naps-posts`) |
-| Storage access | Private bucket; signed URLs at publish time |
-| RLS | Disabled during bootstrap; harden after end-to-end works |
+| Decision             | Value                                                           |
+| -------------------- | --------------------------------------------------------------- |
+| Instagram account    | `ace_naps` professional account                                 |
+| Upload interface     | Single-page Nuxt app with Nuxt UI                               |
+| Upload destination   | One Supabase Storage bucket                                     |
+| Queue rule           | Oldest unprocessed image first                                  |
+| Empty queue behavior | Log `nothing to post` and exit                                  |
+| Caption behavior     | Random caption on every post, repeats allowed                   |
+| Hashtags             | `#naptime #sleep #dogsofinstagram #shihtzulover`                |
+| Posting engine       | Supabase Edge Function on a schedule (09:00 `America/New_York`) |
+| Frontend hosting     | Netlify                                                         |
+| Project layout       | Nuxt app at repo root (`ace-naps-posts`)                        |
+| Storage access       | Private bucket; signed URLs at publish time                     |
+| RLS                  | Disabled during bootstrap; harden after end-to-end works        |
 
 ## High-level architecture
 
@@ -90,15 +90,15 @@ Use one queue table as the source of truth for posting state.
 
 Suggested schema:
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `storage_path` | text | Path to the object in Supabase Storage |
-| `status` | text | `pending`, `posted`, or `failed` |
-| `created_at` | timestamptz | Insert timestamp |
-| `posted_at` | timestamptz nullable | Set after successful publish |
-| `error_message` | text nullable | Last failure detail |
-| `instagram_media_id` | text nullable | Media id returned by Instagram after publish |
+| Column               | Type                 | Notes                                        |
+| -------------------- | -------------------- | -------------------------------------------- |
+| `id`                 | UUID                 | Primary key                                  |
+| `storage_path`       | text                 | Path to the object in Supabase Storage       |
+| `status`             | text                 | `pending`, `posted`, or `failed`             |
+| `created_at`         | timestamptz          | Insert timestamp                             |
+| `posted_at`          | timestamptz nullable | Set after successful publish                 |
+| `error_message`      | text nullable        | Last failure detail                          |
+| `instagram_media_id` | text nullable        | Media id returned by Instagram after publish |
 
 The upload page should insert one row per uploaded file with `status = 'pending'` immediately after a successful Storage upload.
 
@@ -147,7 +147,7 @@ Example structure:
 const CAPTIONS = [
   'Deep in nap mode.',
   'Another elite snooze session.',
-  'Professional resting face.',
+  'Professional resting face.'
 ]
 
 const FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'

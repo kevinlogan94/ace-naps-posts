@@ -30,16 +30,16 @@ async function onUpload() {
   error.value = ''
 
   const results = await uploadPhotos(files.value)
-  const queued = results.filter(r => r.ok).length
-  const failed = results.filter(r => !r.ok)
+  const queued = results.filter((r) => r.ok).length
+  const failed = results.filter((r) => !r.ok)
 
   if (queued) {
     message.value = `Queued ${queued} photo${queued === 1 ? '' : 's'}.`
   }
 
   if (failed.length) {
-    error.value = failed.map(r => `${r.file.name}: ${r.error}`).join('\n')
-    files.value = failed.map(r => r.file)
+    error.value = failed.map((r) => `${r.file.name}: ${r.error}`).join('\n')
+    files.value = failed.map((r) => r.file)
   } else {
     clearFileInput()
   }
@@ -50,9 +50,7 @@ async function onUpload() {
 
 <template>
   <UContainer class="py-8 max-w-md">
-    <h1 class="text-2xl font-semibold mb-2">
-      Ace uploader
-    </h1>
+    <h1 class="text-2xl font-semibold mb-2">Ace uploader</h1>
     <p class="text-sm text-muted mb-6">
       One photo posts each day at 9:00 AM Eastern.
     </p>
@@ -65,7 +63,7 @@ async function onUpload() {
         multiple
         class="block w-full text-sm"
         @change="onFileChange"
-      >
+      />
 
       <UButton
         block

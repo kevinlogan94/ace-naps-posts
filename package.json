@@ -1,10 +1,13 @@
 {
   "name": "ace-naps-posts",
   "private": true,
+  "packageManager": "pnpm@10.24.0",
   "type": "module",
   "scripts": {
     "build": "nuxt generate && rm -rf dist && cp -R .output/public dist",
     "dev": "nuxt dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "generate": "nuxt generate",
     "preview": "nuxt preview"
   },
@@ -12,5 +15,15 @@
     "@nuxt/ui": "^4.4.0",
     "@supabase/supabase-js": "^2.49.8",
     "nuxt": "^4.4.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "vue-demi"
+    ]
+  },
+  "devDependencies": {
+    "prettier": "^3.9.4"
   }
 }
