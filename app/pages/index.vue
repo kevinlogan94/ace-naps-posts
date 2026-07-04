@@ -1,25 +1,41 @@
 <script setup lang="ts">
+useHead({
+  title: 'Upload — Ace Naps'
+})
+
 const fileInput = ref<HTMLInputElement | null>(null)
 const files = ref<File[]>([])
 const uploading = ref(false)
 const message = ref('')
 const error = ref('')
+const errorContext = ref<'pick' | 'size' | 'upload'>('upload')
 
-const fileLabel = computed(() => {
-  if (!files.value.length) {
-    return 'Choose photos — no file chosen'
+const hasFiles = computed(() => files.value.length > 0)
+
+const pickerPrimary = computed(() => {
+  if (!hasFiles.value) {
+    return 'Choose photos'
+  }
+  const count = files.value.length
+  return `${count} photo${count === 1 ? '' : 's'} selected`
+})
+
+const pickerSecondary = computed(() => {
+  if (!hasFiles.value) {
+    return 'Tap to browse your library'
   }
   return files.value.map((file) => file.name).join(', ')
 })
 
-const fileCountLabel = computed(() => {
-  if (!files.value.length) {
-    return ''
+const errorTitle = computed(() => {
+  switch (errorContext.value) {
+    case 'pick':
+      return 'No photos selected'
+    case 'size':
+      return 'File too large'
+    default:
+      return 'Upload failed'
   }
-  const count = files.value.length
-  const noun = count === 1 ? 'photo' : 'photos'
-  const retry = error.value ? ' (retry)' : ''
-  return `${count} ${noun} selected${retry}`
 })
 
 function onFileChange(event: Event) {
@@ -31,6 +47,7 @@ function onFileChange(event: Event) {
   const valid = selected.filter((file) => !getUploadSizeError(file))
 
   if (oversized.length) {
+    errorContext.value = 'size'
     error.value = oversized
       .map((file) => `${file.name}: Must be 8 MB or smaller.`)
       .join('\n')
@@ -50,7 +67,8 @@ function clearFileInput() {
 
 async function onUpload() {
   if (!files.value.length) {
-    error.value = 'Choose at least one photo.'
+    errorContext.value = 'pick'
+    error.value = 'Choose at least one photo before uploading.'
     return
   }
 
@@ -64,16 +82,18 @@ async function onUpload() {
     const failed = results.filter((r) => !r.ok)
 
     if (queued) {
-      message.value = `Queued ${queued} photo${queued === 1 ? '' : 's'}.`
+      message.value = `Queued ${queued} photo${queued === 1 ? '' : 's'} for the next available morning slot.`
     }
 
     if (failed.length) {
+      errorContext.value = 'upload'
       error.value = failed.map((r) => `${r.file.name}: ${r.error}`).join('\n')
       files.value = failed.map((r) => r.file)
     } else {
       clearFileInput()
     }
   } catch (err) {
+    errorContext.value = 'upload'
     error.value =
       err instanceof Error ? err.message : 'Upload failed unexpectedly.'
   } finally {
@@ -83,53 +103,81 @@ async function onUpload() {
 </script>
 
 <template>
-  <UContainer class="py-8 max-w-md">
-    <h1 class="text-2xl font-semibold mb-2">Ace uploader</h1>
-    <p class="text-sm text-muted mb-6">
-      One photo posts each day at 9:00 AM Eastern. Max 8 MB per image.
-    </p>
-
-    <div class="space-y-4">
-      <label
-        class="relative block w-full cursor-pointer rounded-lg border border-dashed border-default bg-elevated/50 px-3 py-3 text-sm text-muted"
-      >
-        <input
-          ref="fileInput"
-          type="file"
-          accept="image/*"
-          multiple
-          class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          @change="onFileChange"
-        >
-        {{ fileLabel }}
-      </label>
-
-      <p v-if="fileCountLabel" class="text-sm text-muted -mt-2">
-        {{ fileCountLabel }}
+  <UContainer
+    class="flex min-h-svh max-w-md flex-col justify-center py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]"
+  >
+    <header class="mb-8">
+      <h1 class="text-2xl font-semibold tracking-tight text-highlighted">
+        Ace uploader
+      </h1>
+      <p class="mt-2 text-sm leading-relaxed text-default">
+        One photo posts each day at 9:00&nbsp;AM Eastern. Max 8&nbsp;MB per
+        image.
       </p>
+    </header>
+
+    <form class="flex flex-col gap-5" @submit.prevent="onUpload">
+      <UFormField label="Photos" name="photos">
+        <label
+          class="group relative flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-lg border border-dashed border-default bg-elevated/50 px-4 py-3 transition-colors duration-200 hover:border-primary/40 hover:bg-elevated focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30 motion-reduce:transition-none"
+        >
+          <input
+            id="photos"
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            multiple
+            class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            :aria-describedby="hasFiles ? 'photo-names' : undefined"
+            @change="onFileChange"
+          >
+          <UIcon
+            :name="hasFiles ? 'i-lucide-images' : 'i-lucide-image-plus'"
+            class="size-5 shrink-0 text-muted transition-colors duration-200 group-hover:text-default group-focus-within:text-default motion-reduce:transition-none"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-medium text-default">
+              {{ pickerPrimary }}
+            </span>
+            <span
+              id="photo-names"
+              class="mt-0.5 block truncate text-xs text-muted"
+            >
+              {{ pickerSecondary }}
+            </span>
+          </span>
+        </label>
+      </UFormField>
 
       <UButton
+        type="submit"
         block
+        size="lg"
+        icon="i-lucide-upload"
         :loading="uploading"
         :disabled="!files.length || uploading"
-        @click="onUpload"
       >
         Upload
       </UButton>
 
-      <UAlert
-        v-if="message"
-        color="success"
-        variant="subtle"
-        :title="message"
-      />
-      <UAlert
-        v-if="error"
-        color="error"
-        variant="subtle"
-        title="Upload failed"
-        :description="error"
-      />
-    </div>
+      <div aria-live="polite" aria-atomic="true" class="flex flex-col gap-3">
+        <UAlert
+          v-if="message"
+          color="success"
+          variant="subtle"
+          icon="i-lucide-circle-check"
+          :title="message"
+        />
+        <UAlert
+          v-if="error"
+          color="error"
+          variant="subtle"
+          icon="i-lucide-circle-alert"
+          :title="errorTitle"
+          :description="error"
+        />
+      </div>
+    </form>
   </UContainer>
 </template>
