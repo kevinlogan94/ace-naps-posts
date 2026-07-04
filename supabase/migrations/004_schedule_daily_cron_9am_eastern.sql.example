@@ -1,10 +1,6 @@
--- Daily cron to invoke ace-naps-posts-instagram-function Edge Function.
--- Requires vault secrets: project_url, service_role_key (see 002_setup_vault_secrets.sql.example).
--- NOTE: Supabase pg_cron uses UTC. 0 14 * * * ≈ 9:00 AM US Eastern (EST); runs 10 AM during EDT.
--- NOTE: For temporary 5-minute testing, apply 003; revert with 004_schedule_daily_cron_9am_eastern.sql.example.
-
-create extension if not exists pg_cron with schema pg_catalog;
-create extension if not exists pg_net with schema extensions;
+-- Apply when done with 5-minute testing (migration 003).
+-- Run in SQL editor or save as 004_schedule_daily_cron_9am_eastern.sql and `supabase db push`.
+-- Supabase pg_cron uses UTC. 0 14 * * * ≈ 9:00 AM US Eastern (EST); runs 10 AM during EDT.
 
 select cron.unschedule('ace-naps-posts-instagram-daily')
 where exists (
