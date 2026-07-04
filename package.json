@@ -4,7 +4,7 @@
   "packageManager": "pnpm@10.24.0",
   "type": "module",
   "scripts": {
-    "build": "nuxt generate && rm -rf dist && cp -R .output/public dist",
+    "build": "nuxt generate",
     "dev": "nuxt dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
