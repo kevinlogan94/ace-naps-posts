@@ -1,0 +1,16 @@
+{
+  "name": "ace-naps-posts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt generate && rm -rf dist && cp -R .output/public dist",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.4.0",
+    "@supabase/supabase-js": "^2.49.8",
+    "nuxt": "^4.4.8"
+  }
+}

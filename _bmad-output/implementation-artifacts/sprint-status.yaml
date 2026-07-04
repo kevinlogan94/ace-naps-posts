@@ -1,0 +1,36 @@
+# generated: 2026-07-03
+# project: ace-naps-posts
+# project_key: ace-naps-posts
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+generated: 2026-07-03
+last_updated: 2026-07-03
+project: ace-naps-posts
+project_key: ace-naps-posts
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-upload-ace-photos-to-the-queue: review
+  1-2-publish-oldest-pending-photo-daily-to-instagram: ready-for-dev
+  epic-1-retrospective: optional
