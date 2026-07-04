@@ -108,8 +108,7 @@ Instagram credentials and any service-level secrets should be stored as Supabase
 
 Recommended secret set:
 
-- `INSTAGRAM_ACCESS_TOKEN`
-- `INSTAGRAM_IG_USER_ID`
+- `INSTAGRAM_ACCESS_TOKEN` (long-lived IGAA token from Instagram Login in Meta for Developers)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
@@ -190,7 +189,7 @@ ace-naps-posts/
 ```text
 supabase/
   functions/
-    post-to-instagram/
+    ace-naps-posts-instagram-function/
       index.ts
   migrations/
     001_create_posts_queue.sql

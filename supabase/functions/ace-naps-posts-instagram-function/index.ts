@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { buildCaption, parseInstagramError } from './captions.ts'
 
-const GRAPH_API_VERSION = 'v21.0'
+const GRAPH_API = 'https://graph.instagram.com/v21.0'
 const SIGNED_URL_TTL_SECONDS = 3600
 
 function getEnv(name: string): string {
@@ -18,7 +18,6 @@ function createServiceClient() {
 }
 
 async function createInstagramMedia(
-  igUserId: string,
   accessToken: string,
   imageUrl: string,
   caption: string
@@ -29,10 +28,9 @@ async function createInstagramMedia(
     access_token: accessToken
   })
 
-  const response = await fetch(
-    `https://graph.facebook.com/${GRAPH_API_VERSION}/${igUserId}/media?${params}`,
-    { method: 'POST' }
-  )
+  const response = await fetch(`${GRAPH_API}/me/media?${params}`, {
+    method: 'POST'
+  })
 
   const body = await response.json()
   if (!response.ok) {
@@ -45,7 +43,6 @@ async function createInstagramMedia(
 }
 
 async function publishInstagramMedia(
-  igUserId: string,
   accessToken: string,
   creationId: string
 ): Promise<string> {
@@ -54,10 +51,9 @@ async function publishInstagramMedia(
     access_token: accessToken
   })
 
-  const response = await fetch(
-    `https://graph.facebook.com/${GRAPH_API_VERSION}/${igUserId}/media_publish?${params}`,
-    { method: 'POST' }
-  )
+  const response = await fetch(`${GRAPH_API}/me/media_publish?${params}`, {
+    method: 'POST'
+  })
 
   const body = await response.json()
   if (!response.ok) {
@@ -72,8 +68,7 @@ async function publishInstagramMedia(
 Deno.serve(async () => {
   try {
     const supabase = createServiceClient()
-    const accessToken = getEnv('INSTAGRAM_ACCESS_TOKEN')
-    const igUserId = getEnv('INSTAGRAM_IG_USER_ID')
+    const accessToken = getEnv('INSTAGRAM_ACCESS_TOKEN').trim()
 
     const { data: row, error: queryError } = await supabase
       .from('posts_queue')
@@ -121,16 +116,11 @@ Deno.serve(async () => {
 
     try {
       const creationId = await createInstagramMedia(
-        igUserId,
         accessToken,
         signed.signedUrl,
         caption
       )
-      const mediaId = await publishInstagramMedia(
-        igUserId,
-        accessToken,
-        creationId
-      )
+      const mediaId = await publishInstagramMedia(accessToken, creationId)
 
       const { error: updateError } = await supabase
         .from('posts_queue')

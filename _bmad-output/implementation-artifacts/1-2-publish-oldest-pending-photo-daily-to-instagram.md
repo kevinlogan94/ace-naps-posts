@@ -14,7 +14,7 @@ so that Ace's nap photos go live without manual publishing.
 
 ## Acceptance Criteria
 
-1. **Given** Edge Function at `supabase/functions/post-to-instagram/index.ts`, **When** secrets set, **Then** `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_IG_USER_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` available to function only (AD-5).
+1. **Given** Edge Function at `supabase/functions/ace-naps-posts-instagram-function/index.ts`, **When** secrets set, **Then** `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_IG_USER_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` available to function only (AD-5).
 2. **Given** pending rows exist, **When** function invoked, **Then** selects oldest by `created_at ASC`, generates signed URL for `storage_path` in `ace-photos` (AD-3, AD-10).
 3. **Given** row selected, **When** caption built, **Then** random string from 30–40 in-code `CAPTIONS` + `\n\n` + `FIXED_HASHTAGS` (AD-7).
 4. **Given** signed URL + caption, **When** Instagram Graph API called, **Then** create media container → publish → update row to `posted` with `posted_at` and `instagram_media_id` (AD-8).
@@ -25,19 +25,19 @@ so that Ace's nap photos go live without manual publishing.
 
 ## Tasks / Subtasks
 
-- [x] Create `supabase/functions/post-to-instagram/index.ts` (AC: 1–6)
+- [x] Create `supabase/functions/ace-naps-posts-instagram-function/index.ts` (AC: 1–6)
   - [x] Service-role Supabase client for DB + signed URLs
   - [x] FIFO query: `.eq('status','pending').order('created_at').limit(1).maybeSingle()`
   - [x] `createSignedUrl` on `ace-photos` bucket (short TTL, e.g. 3600s)
   - [x] Caption: `random(CAPTIONS) + '\n\n' + FIXED_HASHTAGS`
   - [x] Instagram: POST `/{ig-user-id}/media` then `/{ig-user-id}/media_publish`
   - [x] Success/failure row updates
-- [x] Create `supabase/functions/post-to-instagram/captions.ts` — 30–40 strings (AC: 3)
+- [x] Create `supabase/functions/ace-naps-posts-instagram-function/captions.ts` — 30–40 strings (AC: 3)
 - [x] Migration `002_schedule_daily_cron.sql` (AC: 7)
   - [x] Enable `pg_net`, `pg_cron` if not present
   - [x] Schedule with `cron.schedule_in_timezone` at `0 9 * * *` America/New_York
   - [x] Use vault or env placeholder pattern for URL + service role key
-- [x] Document manual invoke: `supabase functions invoke post-to-instagram`
+- [x] Document manual test: dashboard or curl (see README Setup)
 - [x] Manual E2E test before enabling cron in prod (AC: 8)
 
 ## Dev Notes
@@ -73,7 +73,7 @@ Use `fetch` in Deno Edge Function. On non-2xx, parse error JSON for `error_messa
 ### Edge Function Structure
 
 ```text
-supabase/functions/post-to-instagram/
+supabase/functions/ace-naps-posts-instagram-function/
   index.ts      # handler
   captions.ts   # CAPTIONS array + FIXED_HASHTAGS export
 ```
@@ -96,11 +96,11 @@ Store project URL and service role key in Supabase Vault (recommended) or use mi
 
 ```sql
 select cron.schedule_in_timezone(
-  'post-to-instagram-daily',
+  'ace-naps-posts-instagram-daily',
   '0 9 * * *',
   $$
   select net.http_post(
-    url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/post-to-instagram',
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/ace-naps-posts-instagram-function',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
@@ -132,9 +132,9 @@ Include separate `002_setup_vault_secrets.sql.example` if vault secrets must be 
 
 1. Upload image via Story 1.1 flow
 2. Set Edge Function secrets in Supabase dashboard
-3. `supabase functions serve post-to-instagram` or deploy + invoke
+3. Deploy the function, then test via dashboard or curl (see README Setup)
 4. Verify Instagram post + row updated to `posted`
-5. Invoke again with empty queue → logs `nothing to post`
+5. Test again with empty queue → logs `nothing to post`
 6. Apply cron migration after manual test passes
 
 ### References
@@ -157,18 +157,18 @@ Composer
 
 ### Completion Notes List
 
-- Implemented `post-to-instagram` Edge Function with FIFO queue selection, signed URL generation, Instagram Graph API v21.0 create/publish flow, and success/failure row updates per AD-3 through AD-10
+- Implemented `ace-naps-posts-instagram-function` Edge Function with FIFO queue selection, signed URL generation, Instagram Graph API v21.0 create/publish flow, and success/failure row updates per AD-3 through AD-10
 - Added 40 in-code captions with `buildCaption()` and `parseInstagramError()` helpers
 - Added migration `002_schedule_daily_cron.sql` with pg_cron + pg_net at 09:00 America/New_York via vault secrets
 - Added `002_setup_vault_secrets.sql.example` for manual vault secret setup post-deploy
-- Documented manual invoke steps in README
-- Manual E2E (AC 8) requires Kevin to set Instagram secrets and invoke against a real pending row before applying cron in prod — procedure documented in README
+- Documented manual test steps (dashboard / curl) in README Setup
+- Manual E2E (AC 8) requires Kevin to set Instagram secrets and test against a real pending row before applying cron in prod — procedure in README
 
 ### File List
 
-- supabase/functions/post-to-instagram/index.ts (new)
-- supabase/functions/post-to-instagram/captions.ts (new)
-- supabase/functions/post-to-instagram/captions_test.ts (new)
+- supabase/functions/ace-naps-posts-instagram-function/index.ts (new)
+- supabase/functions/ace-naps-posts-instagram-function/captions.ts (new)
+- supabase/functions/ace-naps-posts-instagram-function/captions_test.ts (new)
 - supabase/migrations/002_schedule_daily_cron.sql (new)
 - supabase/migrations/002_setup_vault_secrets.sql.example (new)
 - README.md (modified)
@@ -176,18 +176,19 @@ Composer
 ### Review Findings (2026-07-04)
 
 - [ ] [Review][Decision] AC 8 manual E2E not verified in repo — Story requires a real pending row posted to `@ace_naps` before cron is enabled; no test log or evidence in artifacts. Has this been run successfully?
-- [ ] [Review][Patch] Post-success DB update failure leaves row pending and risks duplicate Instagram post [supabase/functions/post-to-instagram/index.ts:145]
-- [ ] [Review][Patch] Failure-path queue updates ignore Supabase `{ error }` — row can stay pending after signed-URL or Instagram failures [supabase/functions/post-to-instagram/index.ts:108]
-- [ ] [Review][Patch] README missing manual invoke, vault secret, and cron ordering docs despite task marked complete [README.md]
-- [x] [Review][Defer] FIFO selection has no row lock — concurrent manual invoke + cron could double-post [supabase/functions/post-to-instagram/index.ts:78] — deferred, v1 assumes once-daily cron only
-- [x] [Review][Defer] No Instagram container `status_code` polling before publish — spec two-step flow; Meta async containers may flake [supabase/functions/post-to-instagram/index.ts:122] — deferred, spec-compliant
+- [ ] [Review][Patch] Post-success DB update failure leaves row pending and risks duplicate Instagram post [supabase/functions/ace-naps-posts-instagram-function/index.ts:145]
+- [ ] [Review][Patch] Failure-path queue updates ignore Supabase `{ error }` — row can stay pending after signed-URL or Instagram failures [supabase/functions/ace-naps-posts-instagram-function/index.ts:108]
+- [x] [Review][Patch] README missing manual test, vault secret, and cron ordering docs [README.md]
+- [x] [Review][Defer] FIFO selection has no row lock — concurrent manual invoke + cron could double-post [supabase/functions/ace-naps-posts-instagram-function/index.ts:78] — deferred, v1 assumes once-daily cron only
+- [x] [Review][Defer] No Instagram container `status_code` polling before publish — spec two-step flow; Meta async containers may flake [supabase/functions/ace-naps-posts-instagram-function/index.ts:122] — deferred, spec-compliant
 - [x] [Review][Defer] Cron `pg_net.http_post` does not inspect HTTP response — publish failures invisible at DB layer [supabase/migrations/002_schedule_daily_cron.sql:16] — deferred, v1 ops acceptable
 - [x] [Review][Defer] Cron migration can apply before vault secrets exist — URL becomes `NULL/functions/v1/...` [supabase/migrations/002_schedule_daily_cron.sql:17] — deferred, example file + README gap tracked as patch
-- [x] [Review][Defer] Transient signed-URL errors permanently mark row `failed` with no retry [supabase/functions/post-to-instagram/index.ts:106] — deferred, AD-9 no auto-retry; README manual reset documented
-- [x] [Review][Defer] `index.ts` handler untested — only `captions.ts` covered by Deno tests [supabase/functions/post-to-instagram/captions_test.ts] — deferred, v1 acceptable
-- [x] [Review][Defer] `parseInstagramError` stores message only, drops Meta error codes [supabase/functions/post-to-instagram/captions.ts:51] — deferred, minor ops detail
+- [x] [Review][Defer] Transient signed-URL errors permanently mark row `failed` with no retry [supabase/functions/ace-naps-posts-instagram-function/index.ts:106] — deferred, AD-9 no auto-retry; README manual reset documented
+- [x] [Review][Defer] `index.ts` handler untested — only `captions.ts` covered by Deno tests [supabase/functions/ace-naps-posts-instagram-function/captions_test.ts] — deferred, v1 acceptable
+- [x] [Review][Defer] `parseInstagramError` stores message only, drops Meta error codes [supabase/functions/ace-naps-posts-instagram-function/captions.ts:51] — deferred, minor ops detail
 
 ## Change Log
 
-- 2026-07-03: Story 1.2 implementation — Edge Function, captions, cron migration, tests, README manual invoke docs
+- 2026-07-03: Story 1.2 implementation — Edge Function, captions, cron migration, tests, README setup docs
 - 2026-07-04: Code review — 1 decision-needed, 3 patch, 7 defer
+- 2026-07-04: README setup docs; replaced removed `supabase functions invoke` with dashboard/curl

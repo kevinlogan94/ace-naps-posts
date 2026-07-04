@@ -21,7 +21,7 @@ FR3: After a successful Storage upload, the app inserts one `posts_queue` row pe
 FR4: On Storage upload failure, the app shows an error and does not create a queue row.
 FR5: A `posts_queue` Postgres table tracks posting state with columns: `id`, `storage_path`, `status`, `created_at`, `posted_at`, `error_message`, `instagram_media_id`.
 FR6: Status values are `pending`, `posted`, or `failed`.
-FR7: A scheduled Supabase job runs once daily at 09:00 `America/New_York` and invokes the `post-to-instagram` Edge Function.
+FR7: A scheduled Supabase job runs once daily at 09:00 `America/New_York` and invokes the `ace-naps-posts-instagram-function` Edge Function.
 FR8: The Edge Function selects the oldest pending row (`ORDER BY created_at ASC LIMIT 1`).
 FR9: If no pending row exists, the function logs `nothing to post` and exits successfully.
 FR10: The Edge Function generates a short-lived signed URL for the private bucket object before calling Instagram.
@@ -45,10 +45,10 @@ NFR8: No automatic retry or backoff on publish failure in v1.
 ### Additional Requirements
 
 - Project layout: Nuxt app at repo root with `app.vue`, `pages/index.vue`, `composables/useSupabaseUpload.ts`, `utils/supabase.ts`.
-- Supabase layout: `supabase/functions/post-to-instagram/index.ts`, `supabase/migrations/001_create_posts_queue.sql`.
+- Supabase layout: `supabase/functions/ace-naps-posts-instagram-function/index.ts`, `supabase/migrations/001_create_posts_queue.sql`.
 - Create private bucket `ace-photos` before upload flow is tested.
 - Edge Function caption constants: `CAPTIONS` array (30–40 strings) and `FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'`.
-- Daily scheduling via Supabase `pg_cron` + `pg_net` invoking `post-to-instagram`.
+- Daily scheduling via Supabase `pg_cron` + `pg_net` invoking `ace-naps-posts-instagram-function`.
 - Upload page UI: title (e.g. "Ace uploader"), multi-file input, upload button, helper text about 9:00 AM Eastern daily posting.
 - Empty queue behavior: log `nothing to post` and exit 0.
 - Manual retry of failed rows is out-of-band (SQL); not in v1 story scope.
@@ -132,7 +132,7 @@ So that Ace's nap photos go live without manual publishing.
 
 **Acceptance Criteria:**
 
-**Given** Edge Function `post-to-instagram` exists at `supabase/functions/post-to-instagram/index.ts`
+**Given** Edge Function `ace-naps-posts-instagram-function` exists at `supabase/functions/ace-naps-posts-instagram-function/index.ts`
 **When** required secrets are set (`INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_IG_USER_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`)
 **Then** secrets are accessible to the function only and not exposed to the Nuxt client
 
@@ -164,7 +164,7 @@ So that Ace's nap photos go live without manual publishing.
 
 **Given** Supabase cron is configured
 **When** the schedule is inspected
-**Then** `post-to-instagram` is invoked once daily at 09:00 `America/New_York` via `pg_cron` + `pg_net`
+**Then** `ace-naps-posts-instagram-function` is invoked once daily at 09:00 `America/New_York` via `pg_cron` + `pg_net`
 
 **Given** at least one pending row with a valid image exists and Instagram credentials are valid
 **When** the function is invoked manually before enabling cron

@@ -10,8 +10,8 @@ Open the upload page on your phone, pick one or more photos, and send them. They
 
 The access token expires about every 60 days. When that happens:
 
-1. Go to [Meta for Developers](https://developers.facebook.com/) and generate a new long-lived token for the `ace_naps` account.
-2. Update the `INSTAGRAM_ACCESS_TOKEN` secret on the `post-to-instagram` Edge Function in Supabase.
+1. Go to [Meta for Developers](https://developers.facebook.com/) → **Instagram → API setup with Instagram Login** and generate a new long-lived token for `ace_naps`.
+2. Update the `INSTAGRAM_ACCESS_TOKEN` secret on the `ace-naps-posts-instagram-function` Edge Function in Supabase.
 
 Automatic refresh isn’t built yet — you’ll need to do this by hand for now.
 

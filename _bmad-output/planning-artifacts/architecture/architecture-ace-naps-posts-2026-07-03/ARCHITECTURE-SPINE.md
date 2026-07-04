@@ -30,7 +30,7 @@ flowchart LR
     Storage[(ace-photos bucket)]
     Queue[(posts_queue)]
     Cron[pg_cron]
-    EF[post-to-instagram]
+    EF[ace-naps-posts-instagram-function]
   end
   subgraph external [External]
     IG[Instagram Graph API]
@@ -73,13 +73,13 @@ flowchart LR
 
 - **Binds:** upload, publish
 - **Prevents:** leaked Instagram or service-role credentials in client bundles
-- **Rule:** Frontend env: `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY` only. Edge Function secrets: `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_IG_USER_ID`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Rule:** Frontend env: `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY` only. Edge Function secrets: `INSTAGRAM_ACCESS_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 ### AD-6 — Daily publish via Supabase cron → Edge Function [ADOPTED]
 
 - **Binds:** publish
 - **Prevents:** external schedulers or client-triggered posting paths
-- **Rule:** `pg_cron` + `pg_net` invoke `post-to-instagram` once daily at 09:00 `America/New_York`. Empty queue logs `nothing to post` and exits 0.
+- **Rule:** `pg_cron` + `pg_net` invoke `ace-naps-posts-instagram-function` once daily at 09:00 `America/New_York`. Empty queue logs `nothing to post` and exits 0.
 
 ### AD-7 — Caption composition [ADOPTED]
 
@@ -91,7 +91,7 @@ flowchart LR
 
 - **Binds:** publish
 - **Prevents:** unsupported media types and multi-step client publishing
-- **Rule:** Single-image feed post only. Sequence: create media container (image URL + caption) → publish container → persist `instagram_media_id`, `posted_at`, `status = 'posted'`. Account: `ace_naps` professional via Graph API.
+- **Rule:** Single-image feed post only. Sequence: create media container (image URL + caption) → publish container → persist `instagram_media_id`, `posted_at`, `status = 'posted'`. Account: `ace_naps` via Instagram Login API (`graph.instagram.com`, `/me` endpoints, IGAA token).
 
 ### AD-9 — Failure without auto-retry [ADOPTED]
 
@@ -121,7 +121,7 @@ flowchart LR
 
 | Concern | Convention |
 |---|---|
-| Naming | Bucket `ace-photos`; table `posts_queue`; function `post-to-instagram`; status literals lowercase |
+| Naming | Bucket `ace-photos`; table `posts_queue`; function `ace-naps-posts-instagram-function`; status literals lowercase |
 | Data & formats | UUID primary keys; timestamptz for `created_at` / `posted_at`; storage paths relative to bucket root |
 | State & cross-cutting | Queue mutation for publish outcomes only in Edge Function; upload page inserts `pending` only |
 | Logging | Empty queue: `nothing to post`; failures include API error text in `error_message` |
@@ -147,7 +147,7 @@ ace-naps-posts/                 # repo root — Nuxt app lives here
   composables/useSupabaseUpload.ts
   utils/supabase.ts
   supabase/
-    functions/post-to-instagram/index.ts
+    functions/ace-naps-posts-instagram-function/index.ts
     migrations/001_create_posts_queue.sql
   docs/architecture/
   AGENTS.md
@@ -175,7 +175,7 @@ erDiagram
 | Object storage | Supabase Storage `ace-photos` | AD-2, AD-10 |
 | Queue tracking | Postgres `posts_queue` | AD-2, AD-3, AD-4, AD-11 |
 | Daily scheduling | `pg_cron` migration/SQL | AD-6 |
-| Instagram publish | `supabase/functions/post-to-instagram` | AD-5, AD-7, AD-8, AD-9, AD-10 |
+| Instagram publish | `supabase/functions/ace-naps-posts-instagram-function` | AD-5, AD-7, AD-8, AD-9, AD-10 |
 | Caption selection | Edge Function in-code array | AD-7 |
 | Frontend deploy | Netlify | AD-12 |
 
