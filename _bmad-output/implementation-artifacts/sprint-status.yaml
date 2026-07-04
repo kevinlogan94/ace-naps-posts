@@ -31,6 +31,6 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   epic-1: in-progress
-  1-1-upload-ace-photos-to-the-queue: review
+  1-1-upload-ace-photos-to-the-queue: done
   1-2-publish-oldest-pending-photo-daily-to-instagram: review
   epic-1-retrospective: optional

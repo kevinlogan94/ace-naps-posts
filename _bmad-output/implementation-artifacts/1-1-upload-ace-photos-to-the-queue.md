@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 1.1: Upload Ace Photos to the Queue
 
-Status: review
+Status: done
 
 ## Story
 
@@ -175,3 +175,13 @@ Composer
 - [x] [Review][Defer] No client-side file size or MIME enforcement — deferred, out of v1 AC scope
 - [x] [Review][Defer] Serial per-file upload (no concurrency) — deferred, acceptable for v1 phone use case
 - [x] [Review][Defer] Netlify `dist` copy workaround vs publishing `.output/public` directly — deferred, current build works
+
+### Review Findings (2026-07-04)
+
+- [x] [Review][Patch] Wrap `onUpload` in try/finally so `uploading` resets if `uploadPhotos` throws [app/pages/index.vue:39]
+- [x] [Review][Patch] Disable Upload button while `uploading` is true to prevent double-submit [app/pages/index.vue:94]
+- [x] [Review][Patch] Fail fast when Supabase URL or anon key is missing at client init [app/utils/supabase.ts:6]
+- [x] [Review][Defer] Partial failure leaves native file input out of sync with `files.value` [app/pages/index.vue:57] — deferred, minor retry UX; v1 acceptable
+- [x] [Review][Defer] HEIC or empty `file.type` stored as `image/jpeg` may fail at Instagram publish [app/composables/useSupabaseUpload.ts:25] — deferred, out of v1 AC scope
+- [x] [Review][Defer] `status` column has no CHECK constraint [supabase/migrations/001_create_posts_queue.sql:4] — deferred, service-role publish path only writes valid values
+- [x] [Review][Defer] Storage policies in migration are not idempotent on re-apply [supabase/migrations/001_create_posts_queue.sql:19] — deferred, one-time bootstrap migration

@@ -24,9 +24,21 @@ const fileCountLabel = computed(() => {
 
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
-  files.value = input.files ? [...input.files] : []
+  const selected = input.files ? [...input.files] : []
   message.value = ''
-  error.value = ''
+
+  const oversized = selected.filter((file) => getUploadSizeError(file))
+  const valid = selected.filter((file) => !getUploadSizeError(file))
+
+  if (oversized.length) {
+    error.value = oversized
+      .map((file) => `${file.name}: Must be 8 MB or smaller.`)
+      .join('\n')
+  } else {
+    error.value = ''
+  }
+
+  files.value = valid
 }
 
 function clearFileInput() {
@@ -46,22 +58,27 @@ async function onUpload() {
   message.value = ''
   error.value = ''
 
-  const results = await uploadPhotos(files.value)
-  const queued = results.filter((r) => r.ok).length
-  const failed = results.filter((r) => !r.ok)
+  try {
+    const results = await uploadPhotos(files.value)
+    const queued = results.filter((r) => r.ok).length
+    const failed = results.filter((r) => !r.ok)
 
-  if (queued) {
-    message.value = `Queued ${queued} photo${queued === 1 ? '' : 's'}.`
+    if (queued) {
+      message.value = `Queued ${queued} photo${queued === 1 ? '' : 's'}.`
+    }
+
+    if (failed.length) {
+      error.value = failed.map((r) => `${r.file.name}: ${r.error}`).join('\n')
+      files.value = failed.map((r) => r.file)
+    } else {
+      clearFileInput()
+    }
+  } catch (err) {
+    error.value =
+      err instanceof Error ? err.message : 'Upload failed unexpectedly.'
+  } finally {
+    uploading.value = false
   }
-
-  if (failed.length) {
-    error.value = failed.map((r) => `${r.file.name}: ${r.error}`).join('\n')
-    files.value = failed.map((r) => r.file)
-  } else {
-    clearFileInput()
-  }
-
-  uploading.value = false
 }
 </script>
 
@@ -69,7 +86,7 @@ async function onUpload() {
   <UContainer class="py-8 max-w-md">
     <h1 class="text-2xl font-semibold mb-2">Ace uploader</h1>
     <p class="text-sm text-muted mb-6">
-      One photo posts each day at 9:00 AM Eastern.
+      One photo posts each day at 9:00 AM Eastern. Max 8 MB per image.
     </p>
 
     <div class="space-y-4">
@@ -94,7 +111,7 @@ async function onUpload() {
       <UButton
         block
         :loading="uploading"
-        :disabled="!files.length"
+        :disabled="!files.length || uploading"
         @click="onUpload"
       >
         Upload

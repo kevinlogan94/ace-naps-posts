@@ -4,6 +4,15 @@ export type UploadResult = {
   error?: string
 }
 
+export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024
+
+export function getUploadSizeError(file: File): string | undefined {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return 'Must be 8 MB or smaller.'
+  }
+  return undefined
+}
+
 function sanitizeFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
@@ -18,6 +27,12 @@ export async function uploadPhotos(files: File[]): Promise<UploadResult[]> {
   const results: UploadResult[] = []
 
   for (const file of files) {
+    const sizeError = getUploadSizeError(file)
+    if (sizeError) {
+      results.push({ file, ok: false, error: sizeError })
+      continue
+    }
+
     const path = buildStoragePath(file.name)
     const { error: uploadError } = await supabase.storage
       .from('ace-photos')
