@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ace Uploader — UX Mocks (Nuxt UI)</title>
+  <!--
+    Spine: AD-1 (single unauthenticated page), AD-4 (upload → queue), FR15 (success/error feedback)
+    Deferred: recent queue list → v1.1 (shown in Design B as future preview only)
+    Stack target: Nuxt 4 + Nuxt UI 4.x — visual tokens approximated offline
+  -->
+  <style>
+    /* ── Page chrome ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Public Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      line-height: 1.5;
+      padding: 2rem 1.25rem 4rem;
+    }
+    .doc-header { max-width: 72rem; margin: 0 auto 2.5rem; }
+    .doc-header h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; }
+    .doc-header p { margin-top: 0.5rem; color: #64748b; max-width: 42rem; font-size: 0.9375rem; }
+    .doc-meta {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;
+    }
+    .doc-tag {
+      font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 0.25rem 0.625rem; border-radius: 9999px; background: #e2e8f0; color: #475569;
+    }
+
+    /* ── Design sections ───────────────────────────────────────── */
+    .design-section {
+      max-width: 72rem; margin: 0 auto 3.5rem;
+      border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff;
+      overflow: hidden;
+    }
+    .design-section__head {
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;
+      display: grid; gap: 0.375rem;
+    }
+    .design-section__head h2 { font-size: 1.125rem; font-weight: 600; }
+    .design-section__head .subtitle { font-size: 0.875rem; color: #64748b; }
+    .design-section__rationale {
+      padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #f1f5f9;
+      font-size: 0.8125rem; color: #475569;
+    }
+    .design-section__rationale strong { color: #0f172a; }
+    .design-section__body {
+      padding: 1.5rem; display: grid; gap: 1.5rem;
+    }
+    @media (min-width: 900px) {
+      .design-section__body { grid-template-columns: repeat(3, 1fr); }
+    }
+    .state-label {
+      font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 0.625rem;
+    }
+    .state-caption { font-size: 0.75rem; color: #64748b; margin-top: 0.625rem; max-width: 20rem; }
+
+    /* ── Phone frame ───────────────────────────────────────────── */
+    .phone {
+      width: 100%; max-width: 320px; margin: 0 auto;
+      border-radius: 2rem; border: 3px solid #1e293b;
+      background: #1e293b; padding: 0.625rem;
+      box-shadow: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+    }
+    .phone__notch {
+      width: 5rem; height: 0.375rem; background: #334155; border-radius: 9999px;
+      margin: 0 auto 0.5rem;
+    }
+    .phone__screen {
+      border-radius: 1.375rem; overflow: hidden; min-height: 520px;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Nuxt UI token helpers (shared) ────────────────────────── */
+    .ui-container { width: 100%; padding: 2rem 1.25rem; flex: 1; }
+    .ui-title { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.375rem; }
+    .ui-muted { font-size: 0.875rem; color: var(--ui-muted); margin-bottom: 1.5rem; }
+    .ui-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .ui-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%; padding: 0.625rem 1rem; border-radius: 0.5rem; border: none;
+      font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s;
+    }
+    .ui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ui-btn--solid { background: var(--ui-primary); color: var(--ui-primary-fg); }
+    .ui-btn--ghost { background: transparent; color: var(--ui-muted); border: 1px solid var(--ui-border); }
+    .ui-btn--loading::before {
+      content: ''; width: 1rem; height: 1rem; border: 2px solid currentColor;
+      border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ui-alert {
+      padding: 0.875rem 1rem; border-radius: 0.5rem; font-size: 0.875rem;
+      border: 1px solid transparent;
+    }
+    .ui-alert__title { font-weight: 600; margin-bottom: 0.125rem; }
+    .ui-alert--success { background: var(--ui-success-bg); color: var(--ui-success-fg); border-color: var(--ui-success-border); }
+    .ui-alert--error { background: var(--ui-error-bg); color: var(--ui-error-fg); border-color: var(--ui-error-border); }
+    .ui-badge {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.5rem;
+      border-radius: 9999px; text-transform: capitalize;
+    }
+    .ui-badge--pending { background: #fef3c7; color: #92400e; }
+    .ui-badge--posted { background: #dcfce7; color: #166534; }
+    .ui-badge--failed { background: #fee2e2; color: #991b1b; }
+
+    /* ── Design A: Minimal Queue (portfolio blue primary) ──────── */
+    /* Tokens: primary blue, neutral slate — matches portfolio app.config */
+    .design-a .phone__screen { background: #ffffff; --ui-bg: #ffffff; --ui-muted: #64748b; --ui-border: #e2e8f0;
+      --ui-primary: #2563eb; --ui-primary-fg: #ffffff;
+      --ui-success-bg: #f0fdf4; --ui-success-fg: #166534; --ui-success-border: #bbf7d0;
+      --ui-error-bg: #fef2f2; --ui-error-fg: #991b1b; --ui-error-border: #fecaca;
+    }
+    .design-a .ui-file-native {
+      display: block; width: 100%; font-size: 0.875rem; color: var(--ui-muted);
+      padding: 0.75rem; border: 1px dashed var(--ui-border); border-radius: 0.5rem;
+      background: #f8fafc;
+    }
+    .design-a .file-count {
+      font-size: 0.8125rem; color: var(--ui-muted); padding-left: 0.125rem;
+    }
+
+    /* ── Design B: Nap Drop (warm amber, polaroid cues) ─────────── */
+    .design-b .phone__screen {
+      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 35%);
+      --ui-bg: #ffffff; --ui-muted: #78716c; --ui-border: #e7e5e4;
+      --ui-primary: #d97706; --ui-primary-fg: #ffffff;
+      --ui-success-bg: #ecfdf5; --ui-success-fg: #065f46; --ui-success-border: #a7f3d0;
+      --ui-error-bg: #fef2f2; --ui-error-fg: #991b1b; --ui-error-border: #fecaca;
+    }
+    .design-b .ace-mark {
+      width: 3.5rem; height: 3.5rem; border-radius: 9999px;
+      background: linear-gradient(135deg, #fde68a, #fbbf24);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem; margin-bottom: 0.75rem;
+      ring: 2px solid #fff; box-shadow: 0 0 0 2px #e7e5e4, 0 4px 12px rgb(217 119 6 / 0.15);
+    }
+    .design-b .dropzone {
+      border: 2px dashed #d6d3d1; border-radius: 0.75rem; padding: 1.5rem 1rem;
+      text-align: center; background: rgb(255 255 255 / 0.7); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .design-b .dropzone--active { border-color: var(--ui-primary); background: #fffbeb; }
+    .design-b .dropzone__icon {
+      width: 2.5rem; height: 2.5rem; margin: 0 auto 0.625rem; color: #a8a29e;
+    }
+    .design-b .dropzone__label { font-size: 0.875rem; font-weight: 500; color: #44403c; }
+    .design-b .dropzone__hint { font-size: 0.75rem; color: var(--ui-muted); margin-top: 0.25rem; }
+    .design-b .polaroid-row {
+      display: flex; gap: 0.625rem; overflow-x: auto; padding-bottom: 0.25rem;
+      scrollbar-width: none;
+    }
+    .design-b .polaroid-row::-webkit-scrollbar { display: none; }
+    .design-b .polaroid {
+      flex-shrink: 0; background: #fff; padding: 0.375rem 0.375rem 0.5rem;
+      box-shadow: 0 4px 14px rgb(0 0 0 / 0.12); width: 4.5rem;
+      transform: rotate(-2deg);
+    }
+    .design-b .polaroid:nth-child(even) { transform: rotate(2deg); }
+    .design-b .polaroid__img {
+      width: 100%; aspect-ratio: 1; background: linear-gradient(135deg, #fde68a 0%, #fcd34d 50%, #f59e0b 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+    }
+    .design-b .polaroid__name {
+      font-size: 0.5625rem; text-align: center; margin-top: 0.25rem; color: #57534e;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .design-b .schedule-chip {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      font-size: 0.75rem; color: var(--ui-muted); background: #fff;
+      border: 1px solid var(--ui-border); border-radius: 9999px; padding: 0.375rem 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .design-b .schedule-chip svg { width: 0.875rem; height: 0.875rem; color: var(--ui-primary); }
+
+    /* v1.1 preview panel (Design B only) */
+    .design-b .queue-preview {
+      margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--ui-border);
+    }
+    .design-b .queue-preview__label {
+      font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: #a8a29e; margin-bottom: 0.625rem;
+    }
+    .design-b .queue-preview__note {
+      font-size: 0.6875rem; color: #a8a29e; font-style: italic; margin-top: 0.5rem;
+    }
+    .design-b .queue-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 0; font-size: 0.8125rem; color: #44403c;
+    }
+    .design-b .queue-item + .queue-item { border-top: 1px solid #f5f5f4; }
+
+    /* ── Component map footer ──────────────────────────────────── */
+    .component-map {
+      max-width: 72rem; margin: 0 auto;
+      border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff; overflow: hidden;
+    }
+    .component-map h2 {
+      padding: 1.25rem 1.5rem; font-size: 1rem; font-weight: 600;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .component-map table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .component-map th, .component-map td {
+      text-align: left; padding: 0.75rem 1.5rem; border-bottom: 1px solid #f1f5f9;
+    }
+    .component-map th { background: #f8fafc; font-weight: 600; color: #475569; }
+    .component-map code {
+      font-size: 0.75rem; background: #f1f5f9; padding: 0.125rem 0.375rem; border-radius: 0.25rem;
+    }
+    .rec-badge {
+      display: inline-block; font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+      background: #dbeafe; color: #1d4ed8; padding: 0.125rem 0.375rem; border-radius: 0.25rem;
+      margin-left: 0.375rem; vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="doc-header">
+    <h1>Ace Uploader — UI Design Concepts</h1>
+    <p>
+      Two phone-first layouts for the single-page upload surface (AD-1). Both use Nuxt UI 4 component patterns
+      and portfolio-style tokens. Open this file in a browser — fully offline, no JS.
+    </p>
+    <div class="doc-meta">
+      <span class="doc-tag">Nuxt UI 4</span>
+      <span class="doc-tag">v1 scope</span>
+      <span class="doc-tag">Phone-first</span>
+      <span class="doc-tag">No auth</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       DESIGN A — Minimal Queue (recommended v1)
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="design-section design-a">
+    <div class="design-section__head">
+      <h2>Design A — Minimal Queue <span class="rec-badge">Recommended v1</span></h2>
+      <p class="subtitle">Closest to current <code>pages/index.vue</code>. Portfolio blue primary, smallest diff.</p>
+    </div>
+    <div class="design-section__rationale">
+      <strong>Who it's for:</strong> Kevin uploading from his phone after a nap photo session — wants zero friction, no decoration.<br>
+      <strong>Nuxt UI mapping:</strong> <code>UContainer</code> · <code>UButton</code> (block, loading) · native <code>input[type=file]</code> · <code>UAlert</code> (success/error, subtle)<br>
+      <strong>Spine fit:</strong> AD-1, AD-4, FR15. No queue list — deferred to v1.1 per memlog.
+    </div>
+    <div class="design-section__body">
+
+      <!-- State: Idle -->
+      <div>
+        <div class="state-label">Idle</div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="ui-container">
+              <h1 class="ui-title">Ace uploader</h1>
+              <p class="ui-muted">One photo posts each day at 9:00 AM Eastern.</p>
+              <div class="ui-stack">
+                <label class="ui-file-native">Choose photos — no file chosen</label>
+                <button class="ui-btn ui-btn--solid" disabled>Upload</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="state-caption">Default landing. Upload disabled until files are selected.</p>
+      </div>
+
+      <!-- State: Files selected -->
+      <div>
+        <div class="state-label">Files selected</div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="ui-container">
+              <h1 class="ui-title">Ace uploader</h1>
+              <p class="ui-muted">One photo posts each day at 9:00 AM Eastern.</p>
+              <div class="ui-stack">
+                <label class="ui-file-native">ace-nap-01.jpg, ace-nap-02.jpg</label>
+                <p class="file-count">2 photos selected</p>
+                <button class="ui-btn ui-btn--solid">Upload</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="state-caption">Multi-select enabled. Button activates. No preview thumbnails in v1 — keeps code minimal.</p>
+      </div>
+
+      <!-- State: Success + partial error -->
+      <div>
+        <div class="state-label">After upload</div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="ui-container">
+              <h1 class="ui-title">Ace uploader</h1>
+              <p class="ui-muted">One photo posts each day at 9:00 AM Eastern.</p>
+              <div class="ui-stack">
+                <label class="ui-file-native">ace-nap-03.jpg</label>
+                <p class="file-count">1 photo selected (retry)</p>
+                <button class="ui-btn ui-btn--solid">Upload</button>
+                <div class="ui-alert ui-alert--success">
+                  <div class="ui-alert__title">Queued 2 photos.</div>
+                </div>
+                <div class="ui-alert ui-alert--error">
+                  <div class="ui-alert__title">Upload failed</div>
+                  ace-nap-03.jpg: Network error
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="state-caption">Success and error can coexist (partial batch). Failed files stay selected for retry per AD-4.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       DESIGN B — Nap Drop (expressive alternative)
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="design-section design-b">
+    <div class="design-section__head">
+      <h2>Design B — Nap Drop</h2>
+      <p class="subtitle">Warmer palette, drag-drop zone, polaroid previews — portfolio polaroid energy for Ace.</p>
+    </div>
+    <div class="design-section__rationale">
+      <strong>Who it's for:</strong> Same workflow, but with more personality and visual confirmation before upload.<br>
+      <strong>Nuxt UI mapping:</strong> <code>UContainer</code> · <code>UFileUpload</code> (dropzone) · <code>UButton</code> · <code>UAlert</code> · <code>UBadge</code> (v1.1 queue)<br>
+      <strong>Trade-off:</strong> More UI code and thumbnail handling. Queue preview section is explicitly v1.1 — not in initial ship.
+    </div>
+    <div class="design-section__body">
+
+      <!-- State: Idle -->
+      <div>
+        <div class="state-label">Idle</div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="ui-container">
+              <div class="ace-mark" aria-hidden="true">🐕</div>
+              <h1 class="ui-title">Ace uploader</h1>
+              <div class="schedule-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                Posts daily · 9:00 AM ET
+              </div>
+              <div class="dropzone">
+                <svg class="dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+                </svg>
+                <div class="dropzone__label">Drop nap photos here</div>
+                <div class="dropzone__hint">or tap to browse · JPG, PNG, HEIC</div>
+              </div>
+              <div class="ui-stack" style="margin-top: 1rem;">
+                <button class="ui-btn ui-btn--solid" disabled>Queue for Instagram</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="state-caption">Dropzone replaces native file input. Schedule info moved into a chip — scannable on mobile.</p>
+      </div>
+
+      <!-- State: Files selected -->
+      <div>
+        <div class="state-label">Files selected</div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="ui-container">
+              <div class="ace-mark" aria-hidden="true">🐕</div>
+              <h1 class="ui-title">Ace uploader</h1>
+              <div class="schedule-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                Posts daily · 9:00 AM ET
+              </div>
+              <div class="dropzone dropzone--active">
+                <div class="dropzone__label">3 photos ready</div>
+                <div class="dropzone__hint">Tap to add more</div>
+              </div>
+              <div class="polaroid-row" style="margin-top: 0.875rem;">
+                <div class="polaroid"><div class="polaroid__img">🐾</div><div class="polaroid__name">ace-01.jpg</div></div>
+                <div class="polaroid"><div class="polaroid__img">😴</div><div class="polaroid__name">ace-02.jpg</div></div>
+                <div class="polaroid"><div class="polaroid__img">🛋️</div><div class="polaroid__name">ace-03.jpg</div></div>
+              </div>
+              <div class="ui-stack" style="margin-top: 1rem;">
+                <button class="ui-btn ui-btn--solid">Queue for Instagram</button>
+                <button class="ui-btn ui-btn--ghost">Clear all</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="state-caption">Polaroid strip confirms selection. Inspired by portfolio <code>PolaroidItem</code> — rotated, tactile.</p>
+      </div>
+
+      <!-- State: Success + v1.1 queue preview -->
+      <div>
+        <div class="state-label">Success (+ v1.1 preview)</div>
+        <div class="phone">
+          <div class="phone__notch"></div>
+          <div class="phone__screen">
+            <div class="ui-container">
+              <div class="ace-mark" aria-hidden="true">🐕</div>
+              <h1 class="ui-title">Ace uploader</h1>
+              <div class="ui-alert ui-alert--success" style="margin-bottom: 1rem;">
+                <div class="ui-alert__title">Queued 3 photos!</div>
+                Oldest goes first — next post tomorrow at 9 AM.
+              </div>
+              <div class="dropzone">
+                <svg class="dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+                </svg>
+                <div class="dropzone__label">Drop more nap photos</div>
+                <div class="dropzone__hint">or tap to browse</div>
+              </div>
+              <div class="queue-preview">
+                <div class="queue-preview__label">Recent queue · v1.1</div>
+                <div class="queue-item">
+                  <span>ace-01.jpg</span>
+                  <span class="ui-badge ui-badge--pending">pending</span>
+                </div>
+                <div class="queue-item">
+                  <span>ace-02.jpg</span>
+                  <span class="ui-badge ui-badge--pending">pending</span>
+                </div>
+                <div class="queue-item">
+                  <span>yesterday.jpg</span>
+                  <span class="ui-badge ui-badge--posted">posted</span>
+                </div>
+                <p class="queue-preview__note">Deferred per spine — shown here for direction only.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="state-caption">Success copy reinforces FIFO queue rule (AD-3). Queue list is a v1.1 add-on, not v1 scope.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Component mapping
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="component-map">
+    <h2>Nuxt UI component map</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>UI element</th>
+          <th>Design A</th>
+          <th>Design B</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Page shell</td>
+          <td><code>UApp</code> → <code>UContainer max-w-md py-8</code></td>
+          <td>Same</td>
+          <td>Matches portfolio <code>UMain</code> minimal wrapper</td>
+        </tr>
+        <tr>
+          <td>File picker</td>
+          <td>Native <code>input[type=file]</code></td>
+          <td><code>UFileUpload</code></td>
+          <td>A ships today; B needs accept + multiple props</td>
+        </tr>
+        <tr>
+          <td>Primary action</td>
+          <td><code>UButton block</code></td>
+          <td><code>UButton block</code> + optional ghost Clear</td>
+          <td><code>:loading="uploading"</code> · <code>:disabled="!files.length"</code></td>
+        </tr>
+        <tr>
+          <td>Feedback</td>
+          <td><code>UAlert</code> success + error</td>
+          <td>Same + richer success description</td>
+          <td><code>variant="subtle"</code> per current impl</td>
+        </tr>
+        <tr>
+          <td>Theme</td>
+          <td><code>primary: 'blue'</code> (portfolio)</td>
+          <td><code>primary: 'amber'</code></td>
+          <td>Set in <code>app.config.ts</code> ui.colors</td>
+        </tr>
+        <tr>
+          <td>Queue list</td>
+          <td>—</td>
+          <td><code>UBadge</code> + list (v1.1)</td>
+          <td>Requires Supabase read query — out of v1</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</body>
+</html>

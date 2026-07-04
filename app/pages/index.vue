@@ -5,6 +5,23 @@ const uploading = ref(false)
 const message = ref('')
 const error = ref('')
 
+const fileLabel = computed(() => {
+  if (!files.value.length) {
+    return 'Choose photos — no file chosen'
+  }
+  return files.value.map((file) => file.name).join(', ')
+})
+
+const fileCountLabel = computed(() => {
+  if (!files.value.length) {
+    return ''
+  }
+  const count = files.value.length
+  const noun = count === 1 ? 'photo' : 'photos'
+  const retry = error.value ? ' (retry)' : ''
+  return `${count} ${noun} selected${retry}`
+})
+
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   files.value = input.files ? [...input.files] : []
@@ -56,14 +73,23 @@ async function onUpload() {
     </p>
 
     <div class="space-y-4">
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/*"
-        multiple
-        class="block w-full text-sm"
-        @change="onFileChange"
-      />
+      <label
+        class="relative block w-full cursor-pointer rounded-lg border border-dashed border-default bg-elevated/50 px-3 py-3 text-sm text-muted"
+      >
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          @change="onFileChange"
+        >
+        {{ fileLabel }}
+      </label>
+
+      <p v-if="fileCountLabel" class="text-sm text-muted -mt-2">
+        {{ fileCountLabel }}
+      </p>
 
       <UButton
         block

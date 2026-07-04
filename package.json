@@ -14,7 +14,8 @@
   "dependencies": {
     "@nuxt/ui": "^4.4.0",
     "@supabase/supabase-js": "^2.49.8",
-    "nuxt": "^4.4.8"
+    "nuxt": "^4.4.8",
+    "tailwindcss": "^4.3.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
