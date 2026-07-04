@@ -6,6 +6,7 @@
   "scripts": {
     "build": "nuxt generate",
     "dev": "nuxt dev",
+    "deploy:function": "supabase functions deploy ace-naps-posts-instagram-function",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate": "nuxt generate",

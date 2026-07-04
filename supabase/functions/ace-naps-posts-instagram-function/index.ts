@@ -42,6 +42,32 @@ async function createInstagramMedia(
   return creationId
 }
 
+async function waitForContainerReady(
+  accessToken: string,
+  creationId: string
+): Promise<void> {
+  const params = new URLSearchParams({
+    fields: 'status_code',
+    access_token: accessToken
+  })
+
+  for (let i = 0; i < 12; i++) {
+    const response = await fetch(`${GRAPH_API}/${creationId}?${params}`)
+    const body = await response.json()
+    if (!response.ok) throw new Error(parseInstagramError(body))
+
+    const status = (body as { status_code?: string }).status_code
+    if (status === 'FINISHED') return
+    if (status === 'ERROR' || status === 'EXPIRED') {
+      throw new Error(`Instagram container ${status}`)
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+  }
+
+  throw new Error('Instagram container not ready in time')
+}
+
 async function publishInstagramMedia(
   accessToken: string,
   creationId: string
@@ -120,6 +146,7 @@ Deno.serve(async () => {
         signed.signedUrl,
         caption
       )
+      await waitForContainerReady(accessToken, creationId)
       const mediaId = await publishInstagramMedia(accessToken, creationId)
 
       const { error: updateError } = await supabase
