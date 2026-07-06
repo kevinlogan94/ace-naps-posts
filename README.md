@@ -1,5 +1,7 @@
 # ace-naps-posts
 
+<img src="assets/banner.png" alt="Ace Naps banner" />
+
 Upload nap photos of Ace. One photo posts to [@ace_naps](https://www.instagram.com/ace_naps/) every morning at 9 AM Eastern.
 
 ## How it works
