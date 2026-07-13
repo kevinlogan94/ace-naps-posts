@@ -111,7 +111,7 @@ async function onUpload() {
         Ace uploader
       </h1>
       <p class="mt-2 text-sm leading-relaxed text-default">
-        One photo posts each day at 9:00&nbsp;AM Eastern. Max 8&nbsp;MB per
+        One photo posts every day at 10&nbsp;AM Eastern. Max 8&nbsp;MB per
         image.
       </p>
     </header>
