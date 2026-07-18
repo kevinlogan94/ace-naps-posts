@@ -111,8 +111,13 @@ async function onUpload() {
         Ace uploader
       </h1>
       <p class="mt-2 text-sm leading-relaxed text-default">
-        One photo posts every day at 10&nbsp;AM Eastern. Max 8&nbsp;MB per
-        image.
+        One photo posts every day at 10&nbsp;AM Eastern to
+        <a
+          href="https://www.instagram.com/ace_naps/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-highlighted underline underline-offset-2 hover:text-primary"
+        >@ace_naps</a>. Max 8&nbsp;MB per image.
       </p>
     </header>
 
