@@ -7,6 +7,8 @@ export type QueueItem = {
 }
 
 const SIGNED_URL_TTL_SECONDS = 3600
+const POST_HOUR_EASTERN = 10
+const EASTERN_TZ = 'America/New_York'
 
 export async function fetchPendingQueue(): Promise<QueueItem[]> {
   const supabase = useSupabaseClient()
@@ -51,10 +53,50 @@ export async function fetchPendingQueue(): Promise<QueueItem[]> {
   }))
 }
 
-export function formatQueueDate(iso: string) {
+function easternCalendarParts(now: Date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: EASTERN_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(now)
+
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value)
+
+  return {
+    year: value('year'),
+    month: value('month'),
+    day: value('day'),
+    hour: value('hour')
+  }
+}
+
+/** YYYY-MM-DD for the next 10 AM Eastern publish slot. */
+export function nextReleaseDateKey(now = new Date()) {
+  const { year, month, day, hour } = easternCalendarParts(now)
+  const offsetDays = hour < POST_HOUR_EASTERN ? 0 : 1
+  const release = new Date(Date.UTC(year, month - 1, day + offsetDays))
+  return release.toISOString().slice(0, 10)
+}
+
+/** Release calendar day for queue position (1 = next slot). */
+export function releaseDateKeyForOrder(order: number, now = new Date()) {
+  const [year, month, day] = nextReleaseDateKey(now).split('-').map(Number)
+  const release = new Date(Date.UTC(year, month - 1, day + (order - 1)))
+  return release.toISOString().slice(0, 10)
+}
+
+export function formatReleaseDate(order: number, now = new Date()) {
+  const [year, month, day] = releaseDateKeyForOrder(order, now)
+    .split('-')
+    .map(Number)
+
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
-    timeZone: 'America/New_York'
-  }).format(new Date(iso))
+    timeZone: 'UTC'
+  }).format(new Date(Date.UTC(year, month - 1, day, 12)))
 }
