@@ -13,6 +13,7 @@ const error = ref('')
 const errorContext = ref<'pick' | 'size' | 'upload'>('upload')
 
 const queueItems = ref<QueueItem[]>([])
+const queueTotal = ref(0)
 const queueLoading = ref(true)
 const queueError = ref('')
 
@@ -48,7 +49,9 @@ async function loadQueue() {
   queueLoading.value = true
   queueError.value = ''
   try {
-    queueItems.value = await fetchPendingQueue()
+    const { items, total } = await fetchPendingQueue()
+    queueItems.value = items
+    queueTotal.value = total
   } catch (err) {
     queueError.value =
       err instanceof Error ? err.message : 'Failed to load the queue.'
@@ -212,6 +215,7 @@ onMounted(() => {
 
     <QueueLineup
       :items="queueItems"
+      :total="queueTotal"
       :loading="queueLoading"
       :error="queueError"
     />
