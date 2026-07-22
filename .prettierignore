@@ -5,6 +5,7 @@ dist
 _bmad
 _bmad-output
 .agents
+.cursor
 package-lock.json
 pnpm-lock.yaml
 supabase/.temp

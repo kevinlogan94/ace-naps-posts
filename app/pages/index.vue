@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { QueueItem } from '~/composables/usePostsQueue'
+
 useHead({
   title: 'Upload — Ace Naps'
 })
@@ -9,6 +11,10 @@ const uploading = ref(false)
 const message = ref('')
 const error = ref('')
 const errorContext = ref<'pick' | 'size' | 'upload'>('upload')
+
+const queueItems = ref<QueueItem[]>([])
+const queueLoading = ref(true)
+const queueError = ref('')
 
 const hasFiles = computed(() => files.value.length > 0)
 
@@ -37,6 +43,19 @@ const errorTitle = computed(() => {
       return 'Upload failed'
   }
 })
+
+async function loadQueue() {
+  queueLoading.value = true
+  queueError.value = ''
+  try {
+    queueItems.value = await fetchPendingQueue()
+  } catch (err) {
+    queueError.value =
+      err instanceof Error ? err.message : 'Failed to load the queue.'
+  } finally {
+    queueLoading.value = false
+  }
+}
 
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
@@ -83,6 +102,7 @@ async function onUpload() {
 
     if (queued) {
       message.value = `Queued ${queued} photo${queued === 1 ? '' : 's'} for the next available morning slot.`
+      await loadQueue()
     }
 
     if (failed.length) {
@@ -100,11 +120,15 @@ async function onUpload() {
     uploading.value = false
   }
 }
+
+onMounted(() => {
+  void loadQueue()
+})
 </script>
 
 <template>
   <UContainer
-    class="flex min-h-svh max-w-md flex-col justify-center py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]"
+    class="flex min-h-svh max-w-md flex-col justify-start py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]"
   >
     <header class="mb-8">
       <h1 class="text-2xl font-semibold tracking-tight text-highlighted">
@@ -117,7 +141,8 @@ async function onUpload() {
           target="_blank"
           rel="noopener noreferrer"
           class="font-medium text-highlighted underline underline-offset-2 hover:text-primary"
-        >@ace_naps</a>. Max 8&nbsp;MB per image.
+          >@ace_naps</a
+        >. Max 8&nbsp;MB per image.
       </p>
     </header>
 
@@ -135,7 +160,7 @@ async function onUpload() {
             class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             :aria-describedby="hasFiles ? 'photo-names' : undefined"
             @change="onFileChange"
-          >
+          />
           <UIcon
             :name="hasFiles ? 'i-lucide-images' : 'i-lucide-image-plus'"
             class="size-5 shrink-0 text-muted transition-colors duration-200 group-hover:text-default group-focus-within:text-default motion-reduce:transition-none"
@@ -184,5 +209,11 @@ async function onUpload() {
         />
       </div>
     </form>
+
+    <QueueLineup
+      :items="queueItems"
+      :loading="queueLoading"
+      :error="queueError"
+    />
   </UContainer>
 </template>

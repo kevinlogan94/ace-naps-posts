@@ -49,7 +49,7 @@ flowchart LR
 
 - **Binds:** upload
 - **Prevents:** scope creep into auth, dashboards, or multi-page admin flows in v1
-- **Rule:** One route (`/`) with multi-file upload, submit, and success/error feedback only. No login.
+- **Rule:** One route (`/`) with multi-file upload, submit, success/error feedback, and a read-only pending lineup (order, image, date). No login.
 
 ### AD-2 — One bucket, one queue table [ADOPTED]
 
