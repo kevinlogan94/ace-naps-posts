@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { QueueItem } from '~/composables/usePostsQueue'
-import { formatQueueDate } from '~/composables/usePostsQueue'
+import { formatReleaseDate } from '~/composables/usePostsQueue'
 
 const props = defineProps<{
   items: QueueItem[]
@@ -16,7 +16,7 @@ const supporting = computed(() => {
   if (!count) {
     return ''
   }
-  return `${count} photo${count === 1 ? '' : 's'} · next goes out tomorrow at 10 AM`
+  return `${count} photo${count === 1 ? '' : 's'} · one each morning at 10 AM`
 })
 </script>
 
@@ -95,9 +95,8 @@ const supporting = computed(() => {
             </span>
           </div>
           <figcaption class="mt-3">
-            <p class="text-sm font-medium text-highlighted">Tomorrow morning</p>
-            <p class="mt-0.5 text-xs text-muted">
-              {{ formatQueueDate(next.createdAt) }}
+            <p class="text-sm font-medium text-highlighted">
+              {{ formatReleaseDate(next.order) }}
             </p>
           </figcaption>
         </figure>
@@ -138,7 +137,7 @@ const supporting = computed(() => {
               </span>
             </div>
             <p class="mt-1.5 truncate text-center text-xs text-muted">
-              {{ formatQueueDate(item.createdAt) }}
+              {{ formatReleaseDate(item.order) }}
             </p>
           </li>
         </ul>
