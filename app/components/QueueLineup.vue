@@ -4,6 +4,7 @@ import { formatReleaseDate } from '~/composables/usePostsQueue'
 
 const props = defineProps<{
   items: QueueItem[]
+  total: number
   loading: boolean
   error: string
 }>()
@@ -12,7 +13,7 @@ const next = computed(() => props.items[0] ?? null)
 const rest = computed(() => props.items.slice(1))
 
 const supporting = computed(() => {
-  const count = props.items.length
+  const count = props.total
   if (!count) {
     return ''
   }
@@ -30,7 +31,7 @@ const supporting = computed(() => {
         >
           Up next
         </h2>
-        <p v-if="!loading && items.length" class="mt-1 text-sm text-muted">
+        <p v-if="!loading && total" class="mt-1 text-sm text-muted">
           {{ supporting }}
         </p>
       </header>

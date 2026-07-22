@@ -6,16 +6,21 @@ export type QueueItem = {
   order: number
 }
 
+export type PendingQueue = {
+  items: QueueItem[]
+  total: number
+}
+
 const SIGNED_URL_TTL_SECONDS = 3600
 const POST_HOUR_EASTERN = 10
 const EASTERN_TZ = 'America/New_York'
 
-export async function fetchPendingQueue(): Promise<QueueItem[]> {
+export async function fetchPendingQueue(): Promise<PendingQueue> {
   const supabase = useSupabaseClient()
 
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('posts_queue')
-    .select('id, storage_path, created_at')
+    .select('id, storage_path, created_at', { count: 'exact' })
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
     .limit(5)
@@ -25,7 +30,7 @@ export async function fetchPendingQueue(): Promise<QueueItem[]> {
   }
 
   if (!data?.length) {
-    return []
+    return { items: [], total: count ?? 0 }
   }
 
   const { data: signed, error: signError } = await supabase.storage
@@ -45,13 +50,16 @@ export async function fetchPendingQueue(): Promise<QueueItem[]> {
       .map((entry) => [entry.path!, entry.signedUrl!])
   )
 
-  return data.map((row, index) => ({
-    id: row.id,
-    storagePath: row.storage_path,
-    createdAt: row.created_at,
-    signedUrl: urlByPath.get(row.storage_path) ?? null,
-    order: index + 1
-  }))
+  return {
+    items: data.map((row, index) => ({
+      id: row.id,
+      storagePath: row.storage_path,
+      createdAt: row.created_at,
+      signedUrl: urlByPath.get(row.storage_path) ?? null,
+      order: index + 1
+    })),
+    total: count ?? data.length
+  }
 }
 
 function easternCalendarParts(now: Date) {
