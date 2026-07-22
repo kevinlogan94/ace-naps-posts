@@ -26,7 +26,7 @@ Personal, calm, trustworthy. A small private tool — not a product launch. Thre
 
 1. **Phone-first, one task** — the upload screen should work perfectly on mobile with large touch targets.
 2. **Obvious feedback** — every action gets a clear success or error message; never leave the user guessing.
-3. **Minimal chrome** — no navigation, no features beyond upload; the tool disappears into the task.
+3. **Minimal chrome** — no navigation; upload plus a read-only lineup of what's queued so people don't double-post.
 4. **Fail gracefully** — validation and upload errors explain what went wrong and how to recover.
 5. **Earned familiarity** — use standard Nuxt UI patterns; no custom affordances for standard tasks.
 

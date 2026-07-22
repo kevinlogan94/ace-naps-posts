@@ -58,7 +58,7 @@ This split keeps the user-facing experience simple while letting scheduled autom
 
 ### Single page scope
 
-The first version should contain only one page. That page should support selecting one or multiple images, uploading them to Supabase Storage, creating one queue row per file, and showing a basic success or failure message.
+The first version should contain only one page. That page should support selecting one or multiple images, uploading them to Supabase Storage, creating one queue row per file, showing a basic success or failure message, and a read-only pending lineup (order, image, date) so uploaders can see what is already queued.
 
 No authentication, dashboard filters, analytics screens, or admin tooling are required in v1 because they add code without improving the core workflow.
 
@@ -68,7 +68,7 @@ No authentication, dashboard filters, analytics screens, or admin tooling are re
 - Multi-file upload input.
 - Upload button.
 - Small helper text explaining that one image will be posted each day at 9:00 AM Eastern.
-- Optional recent queue list showing latest uploads and statuses.
+- Read-only "Up next" lineup of pending photos (FIFO order, signed Storage thumbnails, queued date).
 
 ## Supabase backend
 
