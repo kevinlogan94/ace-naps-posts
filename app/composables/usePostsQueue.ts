@@ -18,6 +18,7 @@ export async function fetchPendingQueue(): Promise<QueueItem[]> {
     .select('id, storage_path, created_at')
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
+    .limit(5)
 
   if (error) {
     throw error
