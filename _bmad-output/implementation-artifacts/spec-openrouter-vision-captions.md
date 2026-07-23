@@ -67,12 +67,12 @@ warnings: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `_bmad-output/planning-artifacts/architecture/architecture-ace-naps-posts-2026-07-03/ARCHITECTURE-SPINE.md` -- rewrite AD-7 for OpenRouter vision Ace-voice captions; update AD-5 secrets, capability map, Deferred -- locked decision must match code
-- [ ] `docs/architecture/ace-instagram-automation-architecture.md` -- align caption strategy, daily algorithm, secrets, non-goals -- companion doc must not contradict spine
-- [ ] `supabase/functions/ace-naps-posts-instagram-function/captions.ts` -- remove CAPTIONS; add async OpenRouter vision caption builder; append fixed hashtags in code -- core behavior
-- [ ] `supabase/functions/ace-naps-posts-instagram-function/index.ts` -- `await` caption(signedUrl) inside fail-to-`failed` path -- OpenRouter errors must not leave row `pending`
-- [ ] `supabase/functions/ace-naps-posts-instagram-function/captions_test.ts` -- unit-test I/O matrix edges (hashtag append, OpenRouter failure/empty, Ace sentence without hashtags from model) -- verify contract
-- [ ] `README.md` -- document `OPENROUTER_API_KEY` and that captions are Ace-voice vision one-liners -- ops clarity
+- [x] `_bmad-output/planning-artifacts/architecture/architecture-ace-naps-posts-2026-07-03/ARCHITECTURE-SPINE.md` -- rewrite AD-7 for OpenRouter vision Ace-voice captions; update AD-5 secrets, capability map, Deferred -- locked decision must match code
+- [x] `docs/architecture/ace-instagram-automation-architecture.md` -- align caption strategy, daily algorithm, secrets, non-goals -- companion doc must not contradict spine
+- [x] `supabase/functions/ace-naps-posts-instagram-function/captions.ts` -- remove CAPTIONS; add async OpenRouter vision caption builder; append fixed hashtags in code -- core behavior
+- [x] `supabase/functions/ace-naps-posts-instagram-function/index.ts` -- `await` caption(signedUrl) inside fail-to-`failed` path -- OpenRouter errors must not leave row `pending`
+- [x] `supabase/functions/ace-naps-posts-instagram-function/captions_test.ts` -- unit-test I/O matrix edges (hashtag append, OpenRouter failure/empty, Ace sentence without hashtags from model) -- verify contract
+- [x] `README.md` -- document `OPENROUTER_API_KEY` and that captions are Ace-voice vision one-liners -- ops clarity
 
 **Acceptance Criteria:**
 - Given a pending photo and valid OpenRouter key, when the Edge Function runs, then it sends the signed image URL to OpenRouter `openai/gpt-4o-mini`, builds `sentence + "\n\n" + FIXED_HASHTAGS`, and publishes to Instagram without reading the old CAPTIONS array.
