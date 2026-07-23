@@ -6,7 +6,17 @@ Upload nap photos of Ace. One photo posts to [@ace_naps](https://www.instagram.c
 
 ## How it works
 
-Open the upload page on your phone, pick one or more photos, and send them. They go into a queue. Each day, the oldest photo is posted with a random caption and the same hashtags every time.
+Open the upload page on your phone, pick one or more photos, and send them. They go into a queue. Each day, the oldest photo is posted with an Ace-voice one-liner (OpenRouter vision) and the same hashtags every time.
+
+## Edge Function secrets
+
+Set these on `ace-naps-posts-instagram-function` in Supabase:
+
+- `INSTAGRAM_ACCESS_TOKEN` — long-lived IGAA token
+- `OPENROUTER_API_KEY` — for Ace vision captions at publish time
+- `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — usually provided by the platform
+
+If OpenRouter fails, the queue row is marked `failed` (no static caption fallback).
 
 ## When Instagram stops posting
 

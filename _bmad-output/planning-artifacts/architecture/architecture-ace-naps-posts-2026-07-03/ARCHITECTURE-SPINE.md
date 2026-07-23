@@ -7,7 +7,7 @@ paradigm: split-client-scheduled-backend
 scope: Ace photo upload UI + Supabase queue + daily Instagram Graph API publishing
 status: final
 created: '2026-07-03'
-updated: '2026-07-03'
+updated: '2026-07-23'
 binds: [upload, queue, publish]
 sources:
   - docs/architecture/ace-instagram-automation-architecture.md
@@ -73,7 +73,7 @@ flowchart LR
 
 - **Binds:** upload, publish
 - **Prevents:** leaked Instagram or service-role credentials in client bundles
-- **Rule:** Frontend env: `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY` only. Edge Function secrets: `INSTAGRAM_ACCESS_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Rule:** Frontend env: `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY` only. Edge Function secrets: `INSTAGRAM_ACCESS_TOKEN`, `OPENROUTER_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 ### AD-6 — Daily publish via Supabase cron → Edge Function [ADOPTED]
 
@@ -84,8 +84,8 @@ flowchart LR
 ### AD-7 — Caption composition [ADOPTED]
 
 - **Binds:** publish
-- **Prevents:** DB-backed caption CRUD, LLM generation, or variable hashtag sets in v1
-- **Rule:** `finalCaption = random(CAPTIONS) + "\n\n" + FIXED_HASHTAGS` where `FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'`. Captions live in Edge Function source (30–40 strings).
+- **Prevents:** DB-backed caption CRUD, variable hashtag sets, or storing captions for review
+- **Rule:** At publish time, Edge Function calls OpenRouter chat completions via plain `fetch` with hardcoded model `openai/gpt-4o-mini` and the signed image URL. Ace writes one humorous first-person sentence (16-year-old Shih Tzu, old boy, very good boy; no emojis; no hashtags from the model). Code appends `"\n\n" + FIXED_HASHTAGS` where `FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'`. Always generate; do not store the caption. OpenRouter failure → `status = 'failed'` (AD-9); no static fallback.
 
 ### AD-8 — Instagram publish flow [ADOPTED]
 
@@ -176,7 +176,7 @@ erDiagram
 | Queue tracking | Postgres `posts_queue` | AD-2, AD-3, AD-4, AD-11 |
 | Daily scheduling | `pg_cron` migration/SQL | AD-6 |
 | Instagram publish | `supabase/functions/ace-naps-posts-instagram-function` | AD-5, AD-7, AD-8, AD-9, AD-10 |
-| Caption selection | Edge Function in-code array | AD-7 |
+| Caption generation | Edge Function → OpenRouter vision (`openai/gpt-4o-mini`) | AD-5, AD-7, AD-9 |
 | Frontend deploy | Netlify | AD-12 |
 
 ## Deferred
@@ -184,7 +184,7 @@ erDiagram
 | Item | Reason |
 |---|---|
 | User authentication / admin UI | Not required for personal uploader v1 |
-| Caption DB or LLM captions | In-code array sufficient |
+| Caption DB / ops review of captions | Captions are ephemeral at publish time (AD-7) |
 | Second storage bucket / file moves | DB status is enough |
 | Auto-retry / backoff | Manual inspection first; retry via SQL (see README) |
 | Carousels, reels, stories | Single-image feed only in v1 |

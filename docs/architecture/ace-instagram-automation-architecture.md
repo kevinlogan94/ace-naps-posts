@@ -4,7 +4,7 @@
 
 This document defines a minimal architecture for a single-page Nuxt application that uploads Ace photos to Supabase and a Supabase backend that automatically posts one photo per day to Instagram.
 
-The design goal is low complexity, low maintenance, and as little code as possible while preserving a reliable queue, fixed hashtags, and random caption selection from a predefined list.
+The design goal is low complexity, low maintenance, and as little code as possible while preserving a reliable queue, fixed hashtags, and Ace-voice vision captions at publish time.
 
 ## Goals
 
@@ -12,7 +12,7 @@ The design goal is low complexity, low maintenance, and as little code as possib
 - Store uploaded photos in Supabase Storage.
 - Track post state in a database using `pending`, `posted`, and `failed` statuses.
 - Run one scheduled job per day at 9:00 AM Eastern (`America/New_York`) to publish the oldest unprocessed image.
-- Build the final Instagram caption from one random predefined caption plus the same four hashtags every time.
+- Build the final Instagram caption from an Ace-voice OpenRouter vision one-liner plus the same four hashtags every time.
 - Use a professional Instagram account with the official Instagram Graph API publishing flow.
 
 ## Locked product decisions
@@ -24,7 +24,7 @@ The design goal is low complexity, low maintenance, and as little code as possib
 | Upload destination   | One Supabase Storage bucket                                     |
 | Queue rule           | Oldest unprocessed image first                                  |
 | Empty queue behavior | Log `nothing to post` and exit                                  |
-| Caption behavior     | Random caption on every post, repeats allowed                   |
+| Caption behavior     | OpenRouter vision one-liner (Ace first person) + fixed hashtags |
 | Hashtags             | `#naptime #sleep #dogsofinstagram #shihtzulover`                |
 | Posting engine       | Supabase Edge Function on a schedule (09:00 `America/New_York`) |
 | Frontend hosting     | Netlify                                                         |
@@ -109,6 +109,7 @@ Instagram credentials and any service-level secrets should be stored as Supabase
 Recommended secret set:
 
 - `INSTAGRAM_ACCESS_TOKEN` (long-lived IGAA token from Instagram Login in Meta for Developers)
+- `OPENROUTER_API_KEY` (Edge Function only; used for vision captions)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
@@ -120,39 +121,32 @@ The scheduled job should run once per day at 9:00 AM Eastern using Supabase Cron
 
 1. Query the oldest row where `status = 'pending'` ordered by `created_at` ascending.
 2. If no row exists, log `nothing to post` and exit.
-3. Generate a public or signed URL for the image object so Instagram can fetch it from a reachable URL.
-4. Choose one random caption from the predefined in-code caption array, allowing repeats.
-5. Append the fixed hashtag string: `#naptime #sleep #dogsofinstagram #shihtzulover`.
+3. Generate a short-lived signed URL for the image object so Instagram (and OpenRouter) can fetch it.
+4. Call OpenRouter chat completions (`openai/gpt-4o-mini` via plain `fetch`) with the signed image URL; Ace returns one humorous first-person sentence (no emojis, no hashtags).
+5. Append the fixed hashtag string: `#naptime #sleep #dogsofinstagram #shihtzulover`. Do not store the caption in the database.
 6. Call the Instagram Graph API media creation endpoint with the image URL and full caption.
 7. Call the Instagram Graph API publish endpoint for the created media container.
 8. On success, update the row to `posted`, set `posted_at`, and store the returned Instagram media id if available.
-9. On failure, update the row to `failed` and save the error message for inspection.
+9. On failure (including OpenRouter errors), update the row to `failed` and save the error message for inspection. No static caption fallback.
 
 ## Instagram publishing notes
 
 Instagram content publishing requires a professional account and uses the official content publishing flow described in Meta's Instagram Platform documentation.
 
-The implementation should stick to single-image feed posts in v1. Avoid carousels, reels, stories, or AI-generated captions in the first version to minimize branching and reduce maintenance.
+The implementation should stick to single-image feed posts in v1. Avoid carousels, reels, or stories to minimize branching and reduce maintenance. Captions are generated at publish time via OpenRouter vision (AD-7).
 
 The caption field can include hashtags directly, so a single final caption string is enough for posting.
 
 ## Caption strategy
 
-The simplest implementation is to keep the caption options inside the Edge Function as a plain array of 30 to 40 strings.
-
-Example structure:
+At publish time the Edge Function sends the signed image URL to OpenRouter (`openai/gpt-4o-mini`) with a short Ace-voice prompt. Ace is a 16-year-old Shih Tzu — an old boy and a very good boy — writing in first person: one humorous sentence, no emojis, no hashtags from the model. Code appends the fixed hashtags.
 
 ```ts
-const CAPTIONS = [
-  'Deep in nap mode.',
-  'Another elite snooze session.',
-  'Professional resting face.'
-]
-
 const FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'
+// finalCaption = openRouterSentence + "\n\n" + FIXED_HASHTAGS
 ```
 
-This is simpler than storing captions in the database because there is no caption CRUD requirement in the current scope.
+Captions are not stored in the database. OpenRouter failure marks the queue row `failed` with no static fallback.
 
 ## Error handling
 
@@ -211,17 +205,16 @@ Deploy the Nuxt app to **Netlify** with only `NUXT_PUBLIC_SUPABASE_URL` and `NUX
 2. Create the `posts_queue` table migration.
 3. Build the single Nuxt page with multi-file upload.
 4. Insert queue rows after successful uploads.
-5. Build the Edge Function with one hardcoded test caption and the fixed hashtags.
+5. Build the Edge Function with OpenRouter vision captions and the fixed hashtags.
 6. Verify end-to-end posting with one image.
-7. Add the full 30 to 40 caption array.
-8. Add the 9:00 AM Eastern cron schedule.
-9. Enable RLS and tighten Storage policies.
+7. Add the 9:00 AM Eastern cron schedule.
+8. Enable RLS and tighten Storage policies.
 
 ## Non-goals for v1
 
 The following features are intentionally out of scope for the first release:
 
-- Caption generation with an LLM.
+- Caption DB / ops review of generated captions.
 - Multiple buckets or file moves after posting.
 - User accounts or role-based admin UI.
 - Analytics dashboards.
@@ -230,4 +223,4 @@ The following features are intentionally out of scope for the first release:
 
 ## Final recommendation
 
-The simplest maintainable architecture is a Nuxt single-page uploader backed by Supabase Storage and Postgres, with one scheduled Supabase Edge Function that posts the oldest pending image each morning using one random predefined caption and the same four hashtags every time.
+The simplest maintainable architecture is a Nuxt single-page uploader backed by Supabase Storage and Postgres, with one scheduled Supabase Edge Function that posts the oldest pending image each morning using an Ace-voice OpenRouter vision caption and the same four hashtags every time.

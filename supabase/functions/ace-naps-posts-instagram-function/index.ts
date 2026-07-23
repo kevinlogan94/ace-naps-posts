@@ -138,9 +138,8 @@ Deno.serve(async () => {
       })
     }
 
-    const caption = buildCaption()
-
     try {
+      const caption = await buildCaption(signed.signedUrl)
       const creationId = await createInstagramMedia(
         accessToken,
         signed.signedUrl,

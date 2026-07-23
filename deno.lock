@@ -21,7 +21,8 @@
         "npm:@nuxt/ui@^4.4.0",
         "npm:@supabase/supabase-js@^2.49.8",
         "npm:nuxt@^4.4.8",
-        "npm:prettier@^3.9.4"
+        "npm:prettier@^3.9.4",
+        "npm:tailwindcss@^4.3.2"
       ]
     }
   }
