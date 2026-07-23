@@ -16,7 +16,7 @@ Set these on `ace-naps-posts-instagram-function` in Supabase:
 - `OPENROUTER_API_KEY` — for Ace vision captions at publish time
 - `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — usually provided by the platform
 
-If OpenRouter fails, the queue row is marked `failed` (no static caption fallback).
+At publish time the signed photo URL is sent to OpenRouter so the model can write Ace’s caption. If OpenRouter fails, the queue row is marked `failed` (no static caption fallback).
 
 ## When Instagram stops posting
 

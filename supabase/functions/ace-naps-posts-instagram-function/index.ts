@@ -188,7 +188,7 @@ Deno.serve(async () => {
         .update({ status: 'failed', error_message: message })
         .eq('id', row.id)
 
-      console.error('Instagram publish failed:', message)
+      console.error('Publish failed:', message)
       return new Response(JSON.stringify({ error: message }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }

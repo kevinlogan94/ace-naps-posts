@@ -2,7 +2,7 @@
 title: 'OpenRouter vision captions for Ace posts'
 type: 'feature'
 created: '2026-07-23'
-status: 'in-progress'
+status: 'in-review'
 baseline_revision: 'f3bd54042bbb923a94a31c4c2ea8f4a25d7e1186'
 review_loop_iteration: 0
 followup_review_recommended: false
@@ -84,6 +84,24 @@ warnings: []
 
 ## Review Triage Log
 
+### 2026-07-23 — Review pass
+- intent_gap: 0
+- bad_spec: 0
+- patch: 10: (high 1, medium 4, low 5)
+- defer: 1: (medium 1)
+- reject: 8
+- addressed_findings:
+  - `[high]` `[patch]` OpenRouter fetch hang → `AbortSignal.timeout(30s)`
+  - `[medium]` `[patch]` Non-JSON OpenRouter body → safe JSON parse + test
+  - `[medium]` `[patch]` Non-string `message.content` → reject as empty caption + test
+  - `[medium]` `[patch]` Tests ignored outbound contract → assert URL/model/`max_tokens`
+  - `[medium]` `[patch]` README omitted that photos go to OpenRouter → one-line note
+  - `[low]` `[patch]` Whitespace API key → trim before missing-key check
+  - `[low]` `[patch]` Empty signed URL → local throw
+  - `[low]` `[patch]` Add `max_tokens: 80` to keep one-liners short
+  - `[low]` `[patch]` Catch log said Instagram for caption failures → `Publish failed`
+  - `[low]` `[patch]` Unrelated `deno.lock` tailwind entry → reverted
+
 ## Design Notes
 
 OpenRouter request shape (minimal):
@@ -91,21 +109,41 @@ OpenRouter request shape (minimal):
 ```ts
 POST https://openrouter.ai/api/v1/chat/completions
 Authorization: Bearer ${OPENROUTER_API_KEY}
-{ model: 'openai/gpt-4o-mini', messages: [{ role: 'user', content: [
+{ model: 'openai/gpt-4o-mini', max_tokens: 80, messages: [{ role: 'user', content: [
   { type: 'text', text: PROMPT },
   { type: 'image_url', image_url: { url: signedUrl } }
 ]}]}
 ```
 
-Prompt must require: Ace first-person voice; 16yo old good boy; one humorous sentence; no emojis/hashtags; caption text only.
+Prompt must require: Ace first-person voice; 16yo old good boy; one humorous sentence; no emojis/hashtags; caption text only. One-sentence/emoji/hashtag rules are prompt-enforced (no post-filter) per minimize-code intent.
 
 Critical: today's `buildCaption()` sits outside the Instagram try/catch; move caption generation into the path that updates `failed` on throw.
 
 ## Verification
 
 **Commands:**
-- `deno test supabase/functions/ace-naps-posts-instagram-function/captions_test.ts` -- expected: all tests pass
+- `deno test supabase/functions/ace-naps-posts-instagram-function/captions_test.ts` -- expected: all tests pass (9 passed)
 
 **Manual checks (if no CLI):**
 - Confirm `CAPTIONS` array is gone and model id `openai/gpt-4o-mini` is hardcoded
 - Confirm no caption column migration was added
+
+## Auto Run Result
+
+**Summary:** Publish path now generates Ace-voice Instagram captions via OpenRouter vision (`openai/gpt-4o-mini`) from the signed photo URL, appends fixed hashtags in code, and marks the queue `failed` if OpenRouter errors. Architecture spine AD-7 + solution design + README updated.
+
+**Files changed:**
+- `supabase/functions/ace-naps-posts-instagram-function/captions.ts` — OpenRouter vision caption builder
+- `supabase/functions/ace-naps-posts-instagram-function/captions_test.ts` — mocked fetch contract + failure tests
+- `supabase/functions/ace-naps-posts-instagram-function/index.ts` — await caption inside fail path
+- `ARCHITECTURE-SPINE.md` / `ace-instagram-automation-architecture.md` — AD-7 + companions
+- `README.md` — secrets + OpenRouter photo note
+- `spec-openrouter-vision-captions.md` — planning/review artifact
+
+**Review:** 10 patches applied; 1 deferred; 8 rejected (prompt-only contract, Block-If signed-URL reachability, no static fallback, epic/story rewrites out of scope, speculative IG length, startup key check, combined-budget noise covered by timeout).
+
+**Follow-up review recommended:** false
+
+**Verification:** `deno test …/captions_test.ts` → 9 passed | 0 failed
+
+**Residual risks:** OpenRouter must be able to fetch Supabase signed URLs (spec Block If if not). Prompt-only emoji/hashtag/sentence compliance. Ops must set `OPENROUTER_API_KEY` before cron.
