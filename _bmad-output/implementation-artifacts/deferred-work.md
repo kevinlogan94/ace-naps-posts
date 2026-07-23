@@ -22,3 +22,9 @@
 - Transient signed-URL errors permanently mark row `failed` with no retry — AD-9 no auto-retry; README manual reset documented
 - `index.ts` handler untested — only `captions.ts` covered by Deno tests; v1 acceptable
 - `parseInstagramError` stores message only, drops Meta error codes — minor ops detail
+
+## Deferred from: spec-openrouter-vision-captions.md (2026-07-23)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-openrouter-vision-captions.md`
+  summary: Instagram container polling can still consume most of the Edge Function wall-clock after a successful caption, so a late platform abort may leave the row without a clean `failed` update.
+  evidence: Pre-existing `waitForContainerReady` loop (up to ~60s) remains; OpenRouter now has a 30s timeout, but IG polling budget risk is unchanged.

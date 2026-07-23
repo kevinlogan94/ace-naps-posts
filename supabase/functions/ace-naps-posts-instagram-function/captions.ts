@@ -1,51 +1,62 @@
-export const CAPTIONS = [
-  'Deep in nap mode.',
-  'Another elite snooze session.',
-  'Professional resting face.',
-  'Ace has entered the nap dimension.',
-  'Currently accepting zero responsibilities.',
-  'Snooze mode: activated.',
-  'The art of doing absolutely nothing.',
-  'Champion napper reporting for duty.',
-  'Dreaming of treats and belly rubs.',
-  'Out of office. Indefinitely.',
-  'This is my happy place.',
-  'Maximum coziness achieved.',
-  'Not now. Napping.',
-  'Living the dream, one nap at a time.',
-  'Soft fur, softer schedule.',
-  'Ace is offline until further notice.',
-  'Peak relaxation energy.',
-  'The floor is lava. The bed is heaven.',
-  'Certified nap enthusiast.',
-  'Too cute to function today.',
-  'Shih tzu siesta in progress.',
-  'Do not disturb the royalty.',
-  'Blanket burrito mode engaged.',
-  'Sunbeam acquired. Nap commencing.',
-  'Zero thoughts, just zzz.',
-  'Master of the midday snooze.',
-  'Fluff level: maximum.',
-  'Currently recharging cuteness.',
-  'The nap gods have spoken.',
-  'Ace approves this resting spot.',
-  'Sleeping beauty, shih tzu edition.',
-  'All systems down for maintenance.',
-  'Tiny dog, big nap energy.',
-  'Paws up, world off.',
-  'Nap first. Everything else later.',
-  'Soft boy, hard nap.',
-  'Ace is busy being adorable.',
-  'Closed for nap business.',
-  'Dreaming in HD fluff.',
-  'The snooze is strong with this one.'
-] as const
-
 export const FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'
 
-export function buildCaption(): string {
-  const index = Math.floor(Math.random() * CAPTIONS.length)
-  return `${CAPTIONS[index]}\n\n${FIXED_HASHTAGS}`
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const MODEL = 'openai/gpt-4o-mini'
+const OPENROUTER_TIMEOUT_MS = 30_000
+const PROMPT =
+  'You are Ace, a 16-year-old Shih Tzu, an old boy and a very good boy. Write one humorous first-person caption about what you see in this photo. One sentence only. No emojis. No hashtags. Caption text only.'
+
+export async function buildCaption(
+  signedUrl: string,
+  apiKey = Deno.env.get('OPENROUTER_API_KEY')
+): Promise<string> {
+  const key = apiKey?.trim()
+  if (!key) throw new Error('Missing required secret: OPENROUTER_API_KEY')
+  if (!signedUrl) throw new Error('Missing signed image URL')
+
+  const response = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 80,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: PROMPT },
+            { type: 'image_url', image_url: { url: signedUrl } }
+          ]
+        }
+      ]
+    }),
+    signal: AbortSignal.timeout(OPENROUTER_TIMEOUT_MS)
+  })
+
+  let body: unknown
+  try {
+    body = await response.json()
+  } catch {
+    throw new Error(`OpenRouter returned non-JSON (HTTP ${response.status})`)
+  }
+
+  if (!response.ok) {
+    const message =
+      (body as { error?: { message?: string } })?.error?.message ??
+      `OpenRouter HTTP ${response.status}`
+    throw new Error(message)
+  }
+
+  const raw = (body as { choices?: Array<{ message?: { content?: unknown } }> })
+    ?.choices?.[0]?.message?.content
+  const text = typeof raw === 'string' ? raw.trim() : ''
+
+  if (!text) throw new Error('OpenRouter returned empty caption')
+
+  return `${text}\n\n${FIXED_HASHTAGS}`
 }
 
 export function parseInstagramError(body: unknown): string {
