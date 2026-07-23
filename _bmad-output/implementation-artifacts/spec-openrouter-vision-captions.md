@@ -2,11 +2,11 @@
 title: 'OpenRouter vision captions for Ace posts'
 type: 'feature'
 created: '2026-07-23'
-status: 'in-review'
+status: 'done'
 baseline_revision: 'f3bd54042bbb923a94a31c4c2ea8f4a25d7e1186'
 review_loop_iteration: 0
 followup_review_recommended: false
-final_revision: '0214c391c7f8f34a9011d1661e0dbd07bec201da'
+final_revision: 'f88ea037573de38b66b2c2000eeac8523722e7af'
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-ace-naps-posts-2026-07-03/ARCHITECTURE-SPINE.md'
   - '{project-root}/docs/architecture/ace-instagram-automation-architecture.md'
