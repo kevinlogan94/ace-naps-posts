@@ -139,7 +139,7 @@ The caption field can include hashtags directly, so a single final caption strin
 
 ## Caption strategy
 
-At publish time the Edge Function sends the signed image URL to OpenRouter (`openai/gpt-4o-mini`) with a short Ace-voice prompt. Ace is a 16-year-old Shih Tzu — an old boy and a very good boy — writing in first person: one humorous sentence, no emojis, no hashtags from the model. Code appends the fixed hashtags.
+At publish time the Edge Function sends the signed image URL to OpenRouter (`openai/gpt-4o-mini`) with a short Ace-voice prompt. Ace is a 16-year-old Shih Tzu, an old boy and a very good boy, sharing his life with family and friends on `@ace_naps`. Captions are one humorous first-person sentence grounded in a visible photo detail, with an expert-napper / sleep-specialist running joke when it fits. Tone is calm and cozy; no emojis, hashtags, em dashes, or quotation marks from the model. Code appends the fixed hashtags.
 
 ```ts
 const FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'

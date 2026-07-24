@@ -85,7 +85,7 @@ flowchart LR
 
 - **Binds:** publish
 - **Prevents:** DB-backed caption CRUD, variable hashtag sets, or storing captions for review
-- **Rule:** At publish time, Edge Function calls OpenRouter chat completions via plain `fetch` with hardcoded model `openai/gpt-4o-mini` and the signed image URL. Ace writes one humorous first-person sentence (16-year-old Shih Tzu, old boy, very good boy; no emojis; no hashtags from the model). Code appends `"\n\n" + FIXED_HASHTAGS` where `FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'`. Always generate; do not store the caption. OpenRouter failure → `status = 'failed'` (AD-9); no static fallback.
+- **Rule:** At publish time, Edge Function calls OpenRouter chat completions via plain `fetch` with hardcoded model `openai/gpt-4o-mini` and the signed image URL. Ace writes one humorous first-person sentence grounded in the photo (16-year-old Shih Tzu, old boy, very good boy; expert-napper / sleep-specialist running joke when it fits; audience is family and friends who know Ace; calm cozy tone; no emojis, hashtags, em dashes, or quotation marks from the model). Code appends `"\n\n" + FIXED_HASHTAGS` where `FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'`. Always generate; do not store the caption. OpenRouter failure → `status = 'failed'` (AD-9); no static fallback.
 
 ### AD-8 — Instagram publish flow [ADOPTED]
 
