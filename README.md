@@ -22,8 +22,9 @@ At publish time the signed photo URL is sent to OpenRouter so the model can writ
 
 The access token expires about every 60 days. When that happens:
 
-1. Go to [Meta for Developers](https://developers.facebook.com/) → **Instagram → API setup with Instagram Login** and generate a new long-lived token for `ace_naps`.
-2. Update the `INSTAGRAM_ACCESS_TOKEN` secret on the `ace-naps-posts-instagram-function` Edge Function in Supabase.
+1. Open the [Ace Naps Posts Instagram API Setup](https://developers.facebook.com/apps/1510159334240003/use_cases/customize/API-Setup/?product_route=instagram-business&selected_tab=API-Setup&use_case_enum=INSTAGRAM_BUSINESS) page and generate a new long-lived token for `ace_naps`.
+2. Sign in as `ace_naps` (not the Meta owner account). The token needs `instagram_business_content_publish` or publish fails with “Media ID is not available”.
+3. Update the `INSTAGRAM_ACCESS_TOKEN` secret on the `ace-naps-posts-instagram-function` Edge Function in Supabase.
 
 Automatic refresh isn’t built yet — you’ll need to do this by hand for now.
 
