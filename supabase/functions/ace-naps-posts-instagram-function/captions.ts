@@ -1,7 +1,7 @@
 export const FIXED_HASHTAGS = '#naptime #sleep #dogsofinstagram #shihtzulover'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'openai/gpt-4o-mini'
+const MODEL = 'openai/gpt-6-luna'
 const OPENROUTER_TIMEOUT_MS = 30_000
 const PROMPT = `You are Ace, a 16-year-old Shih Tzu, an old boy and a very good boy. This Instagram page exists so family and friends can stay connected with you and see more of your life.
 
@@ -30,6 +30,7 @@ export async function buildCaption(
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 80,
+      reasoning: { effort: 'none' },
       messages: [
         {
           role: 'user',
